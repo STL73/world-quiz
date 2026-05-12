@@ -29,6 +29,11 @@ tasks/
 *.log
 logs/
 
+# ─── Browser automation / E2E captures ─────────────────────────────────
+# agent-browser can record HTTP traffic to .har files; treat as runtime
+# debug artifacts, not source.
+*.har
+
 # ─── PHP ecosystem (future-proofing if you adopt Composer) ─────────────
 vendor/
 composer.phar
