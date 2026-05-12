@@ -25,7 +25,8 @@ A geography quiz web app where players identify world landmarks from photographs
 
 ## Features
 
-**For players**
+### For players
+
 - Identify 46 landmarks from 14 countries with three-option multiple choice
 - Earn star tokens for correct answers — wrong answers cost a token
 - Level system derived from token count (`floor(stars / 100) + 1`)
@@ -33,13 +34,15 @@ A geography quiz web app where players identify world landmarks from photographs
 - Progress is persisted server-side so the next session resumes where the previous one ended
 - Animated feedback overlays show whether the answer was right or wrong
 
-**For admins**
+### For admins
+
 - Add, edit, and delete questions through dedicated forms
 - View every registered user and their score totals
 - Inspect individual user score histories
 - Role-gated dashboards: `user_panel.php` for players, `admin_panel.php` for admins
 
-**Throughout the app**
+### Throughout the app
+
 - Cinematic dark visual design with editorial typography (Playfair Display + Inter)
 - Glassmorphism surfaces over saturated landmark photography
 - Smooth scrollytelling on the landing page
@@ -64,7 +67,7 @@ A geography quiz web app where players identify world landmarks from photographs
 
 No framework. Procedural PHP with file-based routing — each `.php` file is a page or a JSON endpoint. Shared logic lives in `src/includes/`.
 
-```
+```text
 WorldQuiz/
 ├── .htaccess              # Apache rewrite: every request → src/ (URL stays clean)
 ├── src/                   # the entire web app
@@ -98,15 +101,18 @@ WorldQuiz/
     └── split-css.js       # CSS module split (one-shot)
 ```
 
-**Authentication flow**
-```
+### Authentication flow
+
+```text
 login_form.php → sets $_SESSION['user_name'] | $_SESSION['admin_name']
               → redirects to user_panel.php | admin_panel.php
 ```
+
 Session guards at the top of every protected page check `isset($_SESSION['user_name'])` or `isset($_SESSION['admin_name'])`.
 
-**Quiz gameplay loop (AJAX-driven)**
-```
+### Quiz gameplay loop (AJAX-driven)
+
+```text
 quiz.php (page load)
   ↓
 JS/app.js calls get_question.php?id=X

@@ -10,7 +10,7 @@ WorldQuiz is a geography quiz web application. Players identify world landmarks 
 
 The project was restructured into a clean tree:
 
-```
+```text
 WorldQuiz/
 ├── .htaccess              # Apache rewrite: every request → src/ (URL stays clean)
 ├── src/                   # the entire web app
@@ -47,12 +47,14 @@ WorldQuiz/
 
 No build tools or package manager. The app runs directly on a PHP + MySQL stack.
 
-**Local development:**
+### Local development
+
 - Requires PHP with MySQLi extension and a MySQL server (XAMPP, WAMP, or similar)
 - Point the web-server document root at the project root (typically `C:\xampp\htdocs\WorldQuiz\`)
 - Access the app at **`http://localhost/WorldQuiz/`** — the root `.htaccess` silently routes every URL into `src/` (URL bar stays clean, no `src/` visible)
 
-**Database setup:**
+### Database setup
+
 - Create database: `wq_db`
 - Run `database/seed.sql` to create the `countries` table and seed 46 rows.
 - The `users` and `score` tables must still be created manually (schema is inferred from `src/includes/wq_db_connect.php` and the auth/scoring code).
@@ -64,15 +66,18 @@ No build tools or package manager. The app runs directly on a PHP + MySQL stack.
 
 **No framework.** Procedural PHP with file-based routing — each `.php` file is a page or JSON endpoint. All app code lives in `src/`.
 
-**Authentication flow:**
-```
+### Authentication flow
+
+```text
 src/login_form.php → sets $_SESSION['user_name'] | $_SESSION['admin_name']
                    → redirects to src/user_panel.php | src/admin_panel.php
 ```
+
 Session guards at the top of protected pages check `isset($_SESSION['user_name'])` or `isset($_SESSION['admin_name'])`.
 
-**Quiz gameplay loop (AJAX-driven):**
-```
+### Quiz gameplay loop (AJAX-driven)
+
+```text
 src/quiz.php (page load)
   → JS/app.js calls get_question.php?id=X  → JSON {question, hint, img_path, answer1/2/3, ...}
   → user submits → check_answer.php (POST JSON) → updates score/level in DB, returns next question id
@@ -80,13 +85,17 @@ src/quiz.php (page load)
   → user navigates away → save_progress.php (POST JSON) → persists current question id
 ```
 
-**Data layer — two include files handle all DB reads/writes:**
+### Data layer
+
+Two include files handle all DB reads/writes:
+
 - `src/includes/display_data.php` — all `SELECT` queries (users, questions, scores); uses prepared statements
 - `src/includes/delete_data.php` — `DELETE` queries for questions and users
 
 **Admin endpoints:** `src/view_questions.php`, `src/view_users.php`, `src/view_user_score.php`, `src/add_question.php`, `src/edit_question.php`
 
-**Database tables:**
+### Database tables
+
 | Table | Key columns |
 |-------|-------------|
 | `users` | id, name, email, password, user_type ('admin'\|'user') |
