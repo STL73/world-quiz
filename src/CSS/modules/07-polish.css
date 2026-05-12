@@ -1,0 +1,935 @@
+
+/* ============================================================
+   CASCADE — bring quiz / admin / dashboard pages into the
+   editorial + emerald aesthetic. Additive overrides only.
+   ============================================================ */
+
+/* Editorial display headings on dashboard, quiz, and admin pages */
+.admin-page-header h1,
+.quiz-welcome-card h2,
+.user-stat-card h3,
+.user-action-card h3,
+.user-progress-section + .user-section-title,
+.user-section-title {
+  font-family: var(--display-font);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.admin-page-header h1 {
+  font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+  line-height: 1.1;
+  color: var(--text-color);
+}
+.admin-page-header h1 em {
+  font-style: italic;
+  color: var(--accent-italic);
+  font-weight: 500;
+}
+.admin-page-header p {
+  color: rgba(238, 242, 255, 0.65);
+  font-family: var(--ui-font);
+  font-weight: 400;
+}
+.user-section-title {
+  color: var(--accent-italic);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-style: italic;
+  margin-top: 2rem;
+}
+
+/* Existing primary action buttons — pill + emerald */
+.start-btn,
+.quiz-start-btn,
+.qform-submit-btn,
+input.qform-submit-btn {
+  background: var(--accent-gold);
+  color: var(--accent-on-action);
+  border-radius: 999px;
+  font-weight: 600;
+  font-family: var(--ui-font);
+  letter-spacing: 0.01em;
+  border: none;
+  transition: background var(--duration-default) var(--ease-out-quart),
+              box-shadow var(--duration-default) var(--ease-out-quart),
+              transform var(--duration-fast) var(--ease-out-quart);
+}
+.start-btn:hover,
+.quiz-start-btn:hover,
+.qform-submit-btn:hover,
+input.qform-submit-btn:hover {
+  background: #5cd8ba;
+  box-shadow: var(--shadow-glow-gold);
+  transform: translateY(-1px);
+}
+.quiz-start-fresh {
+  background: var(--glass-bg-strong);
+  color: var(--text-color);
+  border: 1px solid var(--glass-border-bright);
+}
+.quiz-start-fresh:hover {
+  background: var(--glass-bg);
+  box-shadow: none;
+}
+
+/* Cancel / back buttons across admin pages */
+.qform-cancel-btn {
+  background: var(--glass-bg);
+  color: var(--text-color);
+  border: 1px solid var(--glass-border-bright);
+  border-radius: 999px;
+  backdrop-filter: blur(var(--glass-blur));
+  transition: background var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) var(--ease-out-quart);
+}
+.qform-cancel-btn:hover {
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 255, 255, 0.30);
+}
+
+/* Glass surfaces for the user dashboard cards */
+.user-stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: transform var(--duration-default) var(--ease-out-quart),
+              border-color var(--duration-default) var(--ease-out-quart);
+}
+.user-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--glass-border-bright);
+}
+.user-stat-card i {
+  color: var(--accent-italic);
+}
+
+.user-action-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: transform var(--duration-default) var(--ease-out-quart),
+              border-color var(--duration-default) var(--ease-out-quart),
+              box-shadow var(--duration-default) var(--ease-out-quart);
+}
+.user-action-card:not(.user-action-disabled):hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-gold);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+.user-action-play {
+  background: linear-gradient(135deg, rgba(70, 197, 168, 0.15), var(--glass-bg));
+  border-color: rgba(70, 197, 168, 0.3);
+}
+.user-action-play i {
+  color: var(--accent-gold);
+}
+
+/* Progress bar in user dashboard */
+.user-progress-bar-fill {
+  background: linear-gradient(90deg, var(--accent-gold) 0%, var(--accent-italic) 100%);
+}
+
+/* Quiz welcome card glass treatment */
+.quiz-welcome-card {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-bright);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.quiz-welcome-card h2 {
+  font-size: clamp(1.7rem, 2.5vw, 2.3rem);
+  letter-spacing: -0.01em;
+  color: var(--text-color);
+}
+.quiz-welcome-icon i {
+  color: var(--accent-gold);
+}
+.quiz-rule-item {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+}
+.quiz-rule-item i {
+  color: var(--accent-italic);
+}
+
+/* Admin form container — glass */
+.qform-container {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.qform-input,
+.qform-select {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--glass-border);
+  color: var(--text-color);
+  transition: border-color var(--duration-fast) var(--ease-out-quart),
+              box-shadow var(--duration-fast) var(--ease-out-quart);
+}
+.qform-input:focus,
+.qform-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px var(--accent-gold-soft);
+}
+.qform-section-title {
+  color: var(--accent-italic);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-style: italic;
+  font-family: var(--display-font);
+  font-weight: 500;
+}
+
+/* View Questions admin cards */
+.q-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  transition: transform var(--duration-default) var(--ease-out-quart),
+              border-color var(--duration-default) var(--ease-out-quart);
+}
+.q-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--glass-border-bright);
+}
+.q-id-badge {
+  background: var(--glass-bg-strong);
+  color: var(--accent-gold);
+  border: 1px solid rgba(70, 197, 168, 0.3);
+}
+.q-country-name {
+  font-family: var(--display-font);
+  font-weight: 600;
+  color: var(--text-color);
+}
+.q-answer-row.correct-answer {
+  background: rgba(70, 197, 168, 0.08);
+  border-color: rgba(70, 197, 168, 0.35);
+}
+.q-answer-row.correct-answer .q-answer-indicator i {
+  color: var(--accent-gold);
+}
+
+/* Quiz token badge — switch from teal to emerald to match palette */
+.quiz-token-badge {
+  background: rgba(70, 197, 168, 0.10);
+  border: 1px solid rgba(70, 197, 168, 0.30);
+  color: var(--text-color);
+}
+.quiz-token-badge i#star {
+  color: var(--accent-italic);
+}
+.quiz-token-badge .badge-level {
+  color: rgba(238, 242, 255, 0.55);
+}
+
+/* Quiz back button */
+.quiz-back-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-color);
+  border-radius: 999px;
+  backdrop-filter: blur(var(--glass-blur));
+  transition: background var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) var(--ease-out-quart);
+}
+.quiz-back-btn:hover {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-bright);
+}
+
+/* Sidebar polish (admin + user) */
+.admin-sidebar {
+  background: var(--glass-bg);
+  border-right: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.sidebar-link {
+  transition: background var(--duration-fast) var(--ease-out-quart),
+              color var(--duration-fast) var(--ease-out-quart);
+}
+.sidebar-link:hover {
+  background: var(--glass-bg-strong);
+  color: var(--text-color);
+}
+.sidebar-link.active {
+  background: rgba(70, 197, 168, 0.12);
+  color: var(--accent-gold);
+  border-left: 3px solid var(--accent-gold);
+}
+.sidebar-section-label {
+  color: var(--accent-italic);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+.sidebar-logout-btn:hover {
+  background: rgba(230, 57, 90, 0.12);
+  color: #ffb3c0;
+}
+
+/* Quiz question card — glass refinement */
+.quiz-question-card {
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border-bright);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.quiz-question-title {
+  font-family: var(--display-font);
+  font-weight: 600;
+  font-size: 1.2rem;
+  letter-spacing: -0.005em;
+}
+.quiz-hint-banner {
+  background: var(--accent-teal-soft);
+  border: 1px solid rgba(91, 213, 213, 0.30);
+  color: var(--accent-teal);
+}
+.quiz-submit-btn {
+  background: var(--accent-gold);
+  color: var(--accent-on-action);
+  border-radius: 999px;
+  font-weight: 600;
+}
+.quiz-submit-btn:hover {
+  background: #5cd8ba;
+  box-shadow: var(--shadow-glow-gold);
+}
+.quiz-hint-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-bright);
+  color: var(--text-color);
+  border-radius: 999px;
+}
+.quiz-hint-btn:hover {
+  background: var(--glass-bg-strong);
+}
+
+/* ============================================================
+   FIX-UP PASS — addresses contrast, label consistency, feedback,
+   and footer. Comes after the cascade so it wins on equal specificity.
+   ============================================================ */
+
+/* ---- Hero text legibility over landmark photos ---- */
+.landing-hero h1 {
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.55);
+}
+.landing-hero h1 em {
+  color: var(--accent-italic);                   /* champagne, now defined globally */
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.75);
+}
+.landing-hero p.lead {
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Eyebrow pill — darker, denser glass + cream star (was bronze, washed out) */
+.landing-hero-eyebrow {
+  background: rgba(7, 6, 26, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.landing-hero-eyebrow i {
+  color: #f4e3b8;                                /* warm cream, reads on any photo */
+  font-size: 0.95rem;
+}
+
+/* ---- Unified label system across header / sidebar / dashboard / footer ---- */
+/* All small uppercase utility labels share ONE look */
+.sidebar-admin-label,
+.sidebar-section-label,
+.user-section-title,
+.footer-social-label {
+  font-family: var(--ui-font);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(238, 242, 255, 0.55);
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.user-section-title {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+.sidebar-section-label {
+  padding: 1rem 1.5rem 0.4rem;
+}
+
+/* The named values that pair with those labels (username, etc.) — display style */
+.sidebar-admin-name {
+  font-family: var(--display-font);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: -0.005em;
+  color: var(--text-color);
+  text-transform: capitalize;
+}
+
+/* Header "Hello, NAME" — match the editorial system */
+.nav-bar .content {
+  color: rgba(238, 242, 255, 0.65);
+  font-family: var(--ui-font);
+  font-size: 0.92rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+.nav-bar .content span {
+  font-family: var(--display-font);
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text-color);
+  letter-spacing: -0.005em;
+  margin-left: 0.25rem;
+}
+
+/* ---- Answer feedback overlay — readable text on saturated overlay ---- */
+#answer-feedback {
+  font-family: var(--display-font);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+#answer-feedback.correct {
+  background: linear-gradient(135deg, rgba(70, 197, 168, 0.55), rgba(70, 197, 168, 0.30));
+  color: #ffffff;
+  border: 1px solid rgba(70, 197, 168, 0.6);
+}
+#answer-feedback.wrong {
+  background: linear-gradient(135deg, rgba(230, 57, 90, 0.55), rgba(230, 57, 90, 0.30));
+  color: #ffffff;
+  border: 1px solid rgba(230, 57, 90, 0.6);
+}
+
+/* ---- Footer — match the new aesthetic ---- */
+footer {
+  background: rgba(7, 6, 26, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+}
+.footer-logo {
+  background: none;
+  -webkit-text-fill-color: var(--text-color);
+  color: var(--text-color);
+  font-family: var(--ui-font);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.footer-logo i {
+  color: var(--accent-gold);                     /* emerald globe */
+  margin-right: 0.1rem;
+}
+.footer-copy {
+  font-family: var(--ui-font);
+  color: rgba(238, 242, 255, 0.55);
+}
+.footer-social-links a {
+  border: 1px solid var(--glass-border);
+  color: rgba(238, 242, 255, 0.65);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  transition: background var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) var(--ease-out-quart),
+              color var(--duration-fast) var(--ease-out-quart);
+}
+.footer-social-links a:hover {
+  background: var(--accent-gold-soft);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* ============================================================
+   STAR TOKEN — Radial Burst animation (Option 1)
+   Replaces the old scaleStar bounce. ~620ms total.
+   ============================================================ */
+
+.quiz-token-badge i#star {
+  position: relative;
+  display: inline-block;
+}
+
+/* Override the base 1s bounce with a 620ms elastic scale */
+.star {
+  animation: starBurst 620ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes starBurst {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.55); }
+  65%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Emerald halo ring that radiates outward and fades */
+.quiz-token-badge i#star.star::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 2.5px solid var(--accent-gold);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  animation: starHalo 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes starHalo {
+  0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.85; border-width: 2.5px; }
+  60%  { opacity: 0.35; }
+  100% { transform: translate(-50%, -50%) scale(3.6); opacity: 0; border-width: 1px; }
+}
+
+/* Token-counter colour bump — re-palette from blue/teal to cream/emerald */
+@keyframes tokenBump {
+  0%   { color: var(--text-color); }
+  30%  { color: var(--accent-gold); transform: scale(1.18); }
+  100% { color: var(--text-color); transform: scale(1); }
+}
+
+/* Star-gain "+N tokens" popup — emerald glow */
+.star-gain-popup {
+  color: var(--accent-gold);
+  text-shadow: 0 0 12px rgba(70, 197, 168, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star { animation: none; }
+  .quiz-token-badge i#star.star::after { display: none; }
+  .star-gain-popup { animation: none; opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   FORM, BUTTON, USERNAME, SPACING & WCAG FIX-UP
+   Applied at the very end so it wins on equal specificity.
+   ============================================================ */
+
+/* ---- Form section titles (Question Details / Answer Options etc.) ---- */
+/* Override the earlier bronze italic — now plain uppercase utility label */
+.qform-section-title {
+  font-family: var(--ui-font);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(238, 242, 255, 0.70);                /* WCAG-safe muted cream */
+  padding-bottom: 0.6rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+/* ---- Username — same font, same style, both header and sidebar ---- */
+/* Switched away from Playfair (the user disliked it) to Inter Semibold */
+.sidebar-admin-name,
+.nav-bar .content span {
+  font-family: var(--ui-font);                     /* Inter — clean, modern, no flourish */
+  font-style: normal;                              /* unify: no italic anywhere */
+  font-weight: 600;
+  color: var(--text-color);
+  letter-spacing: 0.005em;
+  text-transform: capitalize;
+}
+.sidebar-admin-name { font-size: 1.05rem; }
+.nav-bar .content span { font-size: 1rem; margin-left: 0.25rem; }
+.nav-bar .content {
+  color: rgba(238, 242, 255, 0.72);                /* slightly higher contrast */
+}
+
+/* ---- Sidebar / dashboard / footer label opacity bump for WCAG ---- */
+.sidebar-admin-label,
+.sidebar-section-label,
+.user-section-title,
+.footer-social-label {
+  color: rgba(238, 242, 255, 0.70);                /* was 0.55, now passes AA */
+}
+
+/* ---- Form placeholder accessibility ---- */
+.auth-form input::placeholder,
+.qform-input::placeholder {
+  color: rgba(238, 242, 255, 0.50);                /* was 0.40, now passes AA */
+}
+
+/* ---- Small admin per-card action buttons (q-btn-edit / q-btn-delete) ---- */
+.q-btn-edit,
+.q-btn-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;                            /* pill, matches the rest */
+  font-weight: 600;
+  font-size: 0.82rem;
+  font-family: var(--ui-font);
+  letter-spacing: 0.005em;
+  text-decoration: none;
+  border: 1px solid transparent;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: background var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) var(--ease-out-quart),
+              transform var(--duration-fast) var(--ease-out-quart);
+}
+.q-btn-edit {
+  background: rgba(70, 197, 168, 0.10);
+  border-color: rgba(70, 197, 168, 0.30);
+  color: var(--accent-gold);
+}
+.q-btn-edit:hover {
+  background: rgba(70, 197, 168, 0.18);
+  border-color: var(--accent-gold);
+  transform: translateY(-1px);
+}
+.q-btn-delete {
+  background: rgba(230, 57, 90, 0.08);
+  border-color: rgba(230, 57, 90, 0.25);
+  color: #ff8095;                                  /* lifted from --delete-color for AA contrast */
+}
+.q-btn-delete:hover {
+  background: rgba(230, 57, 90, 0.18);
+  border-color: var(--delete-color);
+  transform: translateY(-1px);
+}
+
+/* ---- Sidebar logout button — matches the new button language ---- */
+.sidebar-logout-btn {
+  border-radius: 999px;
+  padding: 0.7rem 1.2rem;
+  background: rgba(230, 57, 90, 0.08);
+  border: 1px solid rgba(230, 57, 90, 0.25);
+  color: #ff8095;
+  font-family: var(--ui-font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  justify-content: center;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: background var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) var(--ease-out-quart),
+              transform var(--duration-fast) var(--ease-out-quart);
+}
+.sidebar-logout-btn:hover {
+  background: rgba(230, 57, 90, 0.18);
+  border-color: var(--delete-color);
+  transform: translateY(-1px);
+}
+
+/* ---- view_questions.php card spacing — question now has breathing room ---- */
+.q-card-body > div + .q-answers {
+  margin-top: 1.1rem;                              /* space between Question block and answers */
+}
+.q-card-body .q-answers + div {
+  margin-top: 1.1rem;                              /* space between answers and Hint block */
+}
+.q-card-body .q-hint-label {
+  font-family: var(--ui-font);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(238, 242, 255, 0.55);
+  margin-bottom: 0.45rem;
+}
+.q-card-body .q-hint {
+  background: var(--glass-bg);
+  border-left: 3px solid var(--accent-italic);
+  color: rgba(238, 242, 255, 0.85);
+  border-radius: 0 8px 8px 0;
+}
+/* Repalette per-card admin elements */
+.q-id-badge {
+  background: var(--glass-bg-strong);
+  color: var(--accent-gold);
+  border: 1px solid rgba(70, 197, 168, 0.30);
+}
+.q-country-name {
+  font-family: var(--display-font);
+  font-weight: 600;
+  color: var(--text-color);
+  letter-spacing: -0.005em;
+}
+.q-answer-text {
+  color: rgba(238, 242, 255, 0.78);                /* was primary-color blue */
+  font-weight: 400;
+}
+.q-answer-row.correct-answer .q-answer-text {
+  color: var(--accent-gold);                        /* emerald (was --edit-color teal) */
+  font-weight: 600;
+}
+.q-answer-row.correct-answer .q-answer-indicator {
+  background: rgba(70, 197, 168, 0.15);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+.q-answer-row {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+.q-answer-row.correct-answer {
+  background: rgba(70, 197, 168, 0.08);
+  border-color: rgba(70, 197, 168, 0.40);
+}
+
+/* ---- Per-card action buttons row spacing ---- */
+.q-card-actions { gap: 0.45rem; }
+
+/* ============================================================
+   USERNAME COLOUR + SCORES TABLE STAR/TOKEN — champagne
+   ============================================================ */
+
+/* Username in header + sidebar — now champagne (was cream) */
+.sidebar-admin-name,
+.nav-bar .content span {
+  color: var(--accent-italic);
+}
+
+/* Scores admin table — star icon + tokens number in champagne */
+.score-badge {
+  color: var(--accent-italic);
+}
+.score-badge i {
+  color: var(--accent-italic);
+  font-size: 1.05rem;
+}
+
+/* Level badge — refresh palette so the column reads cleanly next to champagne tokens */
+.level-badge {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-color);
+}
+
+/* User-type badge — refresh to match dark-glass aesthetic */
+.user-type-badge.user {
+  background: rgba(70, 197, 168, 0.10);
+  border-color: rgba(70, 197, 168, 0.30);
+  color: var(--accent-gold);
+}
+.user-type-badge.admin {
+  background: rgba(232, 195, 137, 0.10);
+  border-color: rgba(232, 195, 137, 0.30);
+  color: var(--accent-italic);
+}
+
+/* ============================================================
+   QUIZ PAGE — question/answer colours repaletted (blue → cream/emerald)
+   And landing preview restructured to mirror the real game.
+   ============================================================ */
+
+/* Question title — was inheriting pale blue from .question-box h2 (higher
+   specificity rule at line 664). Beat it here with a 2-class selector. */
+.question-box .quiz-question-title,
+.quiz-question-card .quiz-question-title,
+.quiz-question-title {
+  color: var(--accent-italic);
+  font-family: var(--display-font);
+  font-weight: 600;
+  font-size: 1.3rem;
+  letter-spacing: -0.005em;
+  margin-bottom: 1rem;
+}
+
+/* Answer options — cream label, emerald hover/selected (was all blue) */
+.quiz-answers-row .input-box,
+.question-content .answer-box .input-box {
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  transition: border-color 0.2s, background 0.2s, transform 0.15s,
+              box-shadow 0.2s;
+}
+.quiz-answers-row .input-box:hover,
+.input-box:hover {
+  border-color: var(--accent-gold);
+  background: rgba(70, 197, 168, 0.08);
+  transform: translateY(-2px);
+}
+.quiz-answers-row .input-box:has(input:checked),
+.input-box:has(input:checked) {
+  border-color: var(--accent-gold);
+  background: rgba(70, 197, 168, 0.14);
+  box-shadow: 0 0 18px rgba(70, 197, 168, 0.30);
+}
+.quiz-answers-row .input-box:has(input:checked) label,
+.input-box:has(input:checked) label {
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+.quiz-answers-row .input-box label,
+.input-box label {
+  color: var(--text-color);
+  font-weight: 500;
+  font-family: var(--ui-font);
+}
+
+/* Hint button — repalette from purple/lavender to teal (matches hint pill on landing) */
+.quiz-hint-btn {
+  background: rgba(91, 213, 213, 0.10);
+  border: 1px solid rgba(91, 213, 213, 0.32);
+  color: var(--accent-teal);
+}
+.quiz-hint-btn:hover {
+  background: rgba(91, 213, 213, 0.20);
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 14px rgba(91, 213, 213, 0.22);
+}
+
+/* Hint banner (shown when revealed) — teal accent */
+.quiz-hint-banner {
+  background: rgba(91, 213, 213, 0.10);
+  border-left: 3px solid var(--accent-teal);
+  color: var(--text-color);
+  padding: 0.85rem 1.1rem;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.92rem;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================
+   LANDING PREVIEW — now mirrors the real-game structure
+   ============================================================ */
+
+/* Question title — Playfair, champagne (matches the real-game .quiz-question-title) */
+.landing-preview-question {
+  font-family: var(--display-font);
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  color: var(--accent-italic);
+  margin-bottom: 1.25rem;
+  line-height: 1.15;
+}
+
+/* Answers — horizontal 3-col grid (matches .quiz-answers-row) */
+.landing-preview-answers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+.landing-preview-answer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.85rem 0.75rem;
+  background: var(--glass-bg);
+  border: 2px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-color);
+  font-size: 0.88rem;
+  font-weight: 500;
+  font-family: var(--ui-font);
+  min-height: 56px;
+  line-height: 1.25;
+}
+.landing-preview-answer.correct {
+  border-color: var(--accent-gold);
+  background: rgba(70, 197, 168, 0.14);
+  color: var(--accent-gold);
+  font-weight: 600;
+  box-shadow: 0 0 18px rgba(70, 197, 168, 0.20);
+}
+
+/* Action bar — matches the real-game .quiz-action-bar */
+.landing-preview-action-bar {
+  display: flex;
+  gap: 0.75rem;
+}
+.landing-preview-btn-hint,
+.landing-preview-btn-submit {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--ui-font);
+  letter-spacing: 0.005em;
+}
+.landing-preview-btn-hint {
+  background: rgba(91, 213, 213, 0.10);
+  border: 1px solid rgba(91, 213, 213, 0.32);
+  color: var(--accent-teal);
+}
+.landing-preview-btn-submit {
+  background: var(--accent-gold);
+  color: var(--accent-on-action);
+  border: none;
+  box-shadow: 0 4px 14px rgba(70, 197, 168, 0.22);
+}
+
+/* Stack vertically on narrow screens */
+@media (max-width: 720px) {
+  .landing-preview-answers {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   LANDING PREVIEW — fill-height body, hint banner, balanced spacing
+   Mirrors the real game in the "hint revealed" state.
+   ============================================================ */
+
+/* Stretch the body to the photo's height instead of vertically centering */
+.landing-preview-grid {
+  align-items: stretch;
+  gap: 2.5rem;
+}
+
+/* Body fills its column and spreads its sections vertically */
+.landing-preview-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.1rem;
+  padding: 0.4rem 0;
+}
+
+/* Hint banner — mirrors .quiz-hint-banner in the real game (when hint is used) */
+.landing-preview-hint-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(91, 213, 213, 0.10);
+  border-left: 3px solid var(--accent-teal);
+  border-radius: 0 10px 10px 0;
+  color: rgba(238, 242, 255, 0.90);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.landing-preview-hint-banner i {
+  color: var(--accent-teal);
+  font-size: 1.05rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+/* Remove any leftover margin-bottom from older preview rules so spacing is gap-only */
+.landing-preview-body .landing-preview-question { margin-bottom: 0; }
+.landing-preview-answers { margin-bottom: 0; }
+
