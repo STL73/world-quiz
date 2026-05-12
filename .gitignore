@@ -11,6 +11,8 @@ CLAUDE.local.md
 # ─── Generated / regenerable ───────────────────────────────────────────
 graphify-out/
 memory/
+# graphify's local cache files (ast, detect, python, uncached)
+.graphify_*
 *.bak
 *.tmp
 

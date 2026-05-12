@@ -1,0 +1,68 @@
+# .gitattributes — normalize line endings and declare binary files
+#
+# Strategy:
+#   * Repo always stores text files with LF (canonical, cross-platform).
+#   * Checkout behavior is per-file: most stay LF, batch files force CRLF.
+#   * Binary files are declared explicitly so Git never tries to normalize
+#     or diff them as text.
+
+# ─── Default ───────────────────────────────────────────────────────────
+# Auto-detect text vs binary. Normalize text to LF in the repo.
+* text=auto eol=lf
+
+# ─── Source code (text, LF) ────────────────────────────────────────────
+*.php       text eol=lf
+*.js        text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.htm       text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+*.sql       text eol=lf
+*.xml       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# ─── Config files (text, LF) ───────────────────────────────────────────
+.htaccess           text eol=lf
+.gitignore          text eol=lf
+.gitattributes      text eol=lf
+.graphifyignore     text eol=lf
+.env                text eol=lf
+.env.*              text eol=lf
+
+# ─── Shell vs Windows scripts (line endings matter for execution) ──────
+*.sh        text eol=lf
+*.bash      text eol=lf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# ─── Images (binary — never diff, never normalize) ─────────────────────
+*.jpg       binary
+*.jpeg      binary
+*.png       binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.bmp       binary
+# SVG is XML, treat as text so it diffs nicely
+*.svg       text eol=lf
+
+# ─── Fonts (binary) ────────────────────────────────────────────────────
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.eot       binary
+
+# ─── Archives / docs (binary) ──────────────────────────────────────────
+*.pdf       binary
+*.zip       binary
+*.gz        binary
+*.tar       binary
+*.7z        binary
+
+# ─── GitHub linguist hints (cosmetic — affects language stats on GitHub)
+# Don't count images or vendored assets toward language stats
+src/Images/**           linguist-vendored
