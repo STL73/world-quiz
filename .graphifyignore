@@ -1,0 +1,58 @@
+# .graphifyignore — controls what graphify indexes
+#
+# Strategy: ignore EVERYTHING by default (line below: `*`), then whitelist
+# only the source tree. Anything outside src/ is config, generated output,
+# documentation, or platform pollution — none of it is code to map.
+
+# 1. Ignore everything
+*
+
+# 2. Whitelist the source tree (the only thing graphify should index)
+!src/
+!src/**
+
+# 3. Defence-in-depth — explicit ignores in case the whitelist ever leaks.
+#    These cover folders/files that might appear inside src/ later but
+#    should never be indexed for code structure.
+
+# Binary asset directory — 46 landmark photos, zero code structure.
+# Indexing these inflates the graph with leaf nodes that have no edges.
+src/Images/
+
+# Generated graphify output, in case it ever lands inside src/.
+# (Top-level graphify-out/ is already excluded by the `*` rule.)
+src/graphify-out/
+
+# Build output / dependencies (in case the project adopts composer or npm later)
+src/vendor/
+src/node_modules/
+src/dist/
+src/build/
+src/.cache/
+
+# Minified assets — no semantic value
+src/**/*.min.css
+src/**/*.min.js
+
+# NOTE: src/CSS/style.css is kept in the graph deliberately — it is the
+# single stylesheet for the whole app and useful for "where is class X
+# defined / used" queries.
+
+# Common project pollution (already covered by `*` but explicit for safety)
+.env
+.env.*
+*.log
+*.lock
+composer.lock
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary preview / scratch files
+palette-preview.html
+
+# Editor / IDE config that some tools leave behind
+.vscode/
+.idea/
+*.swp
+*~

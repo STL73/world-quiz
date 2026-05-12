@@ -1,0 +1,48 @@
+# WorldQuiz — Apache rewrite config
+#
+# Silently routes every web request into src/ so that:
+#   /                 → src/index.php   (landing)
+#   /login_form.php   → src/login_form.php
+#   /CSS/style.css    → src/CSS/style.css
+#   …and so on for every URL.
+#
+# The URL bar stays clean (no "src/" visible). Files actually live under src/.
+# This is the same pattern Laravel, Symfony, and Slim use for their public/ folder.
+
+# ── Required options ────────────────────────────────────────────
+# +FollowSymLinks — this project is served through a symlink at
+#   D:\xampp\htdocs\WorldQuiz, and mod_rewrite silently refuses to
+#   evaluate RewriteRule unless symlink-following is explicitly on.
+# -Indexes — prevent Apache from listing the directory if a rewrite
+#   ever fails; we'd rather see a clear 403 than the file tree.
+# -MultiViews — content negotiation can interfere with rewrites.
+Options +FollowSymLinks -Indexes -MultiViews
+
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1. The root path: explicitly serve the landing. This MUST come before
+    #    the "skip if file/dir exists" rule below, because the root URL
+    #    matches the project's root directory itself (which always exists
+    #    as a directory), and we'd otherwise short-circuit and serve nothing.
+    RewriteRule ^$ src/index.php [L]
+
+    # 2. If the requested path matches a real file or directory at the
+    #    project root (database/, graphify-out/, CLAUDE.md, .htaccess itself,
+    #    etc.), serve it directly — no rewrite. Note: `.` (not `^`) requires
+    #    at least one character, so the empty URI handled by rule 1 above
+    #    doesn't re-enter this rule.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule . - [L]
+
+    # 3. Everything else: prepend src/ and let Apache resolve again.
+    RewriteRule ^(.*)$ src/$1 [L]
+</IfModule>
+
+# Block direct browsing of .htaccess content via the web
+<Files ".htaccess">
+    Require all denied
+</Files>
