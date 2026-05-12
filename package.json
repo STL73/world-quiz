@@ -1,0 +1,12 @@
+{
+  "name": "worldquiz-tools",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Build/maintenance tooling for the WorldQuiz PHP app. The app itself is pure PHP — these scripts only run on-demand for asset processing.",
+  "scripts": {
+    "compress-images": "node tools/compress-images.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.0"
+  }
+}
