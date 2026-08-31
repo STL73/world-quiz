@@ -1,0 +1,42 @@
+{
+  // Markdown lint RULES for this repo. Runner options (ignores) live in
+  // .markdownlint-cli2.jsonc beside this file — they are silently discarded
+  // from here.
+  //
+  // Self-contained rather than "extends" of the machine-global config.
+  // markdownlint-cli2 walks up from each linted file but stops at the working
+  // directory, so a run started inside this repo never reaches a config in the
+  // home directory — and on another drive it never could. An "extends" of an
+  // absolute path also breaks on clone: it throws ENOENT and lints nothing at
+  // all rather than degrading. Keep in sync with ~/.markdownlint.jsonc by hand;
+  // the copy of record is ~/.claude/home-config/. Added 2026-08-31.
+
+  "default": true,
+
+  // Line length: not enforced. Prose wraps naturally, tables are wide, and long
+  // URLs break the rule without any benefit.
+  "MD013": false,
+
+  // Inline HTML: allowed. <details>, <br>, <kbd> earn their place in a README.
+  "MD033": false,
+
+  // Duplicate headings: only flag siblings at the same level.
+  "MD024": { "siblings_only": true },
+
+  // Trailing punctuation in headings: the default set minus "?", since
+  // question-style headings are a legitimate documentation pattern.
+  "MD026": { "punctuation": ".,;:!" },
+
+  // Blank line inside blockquote: off. Two adjacent callouts must be separated
+  // by a blank line, which this rule reads as one broken blockquote.
+  "MD028": false,
+
+  // Table style: pinned rather than inferred. Left to itself the rule guesses
+  // per document from the first table and can settle on "aligned", which
+  // --fix cannot produce, leaving errors with no way to clear them.
+  "MD060": { "style": "compact" },
+
+  // First-line H1: Claude Code agent and skill files use YAML frontmatter with
+  // a `description:` as their title rather than a `# Heading`.
+  "MD041": { "front_matter_title": "^\\s*(title|description)\\s*[:=]" }
+}
