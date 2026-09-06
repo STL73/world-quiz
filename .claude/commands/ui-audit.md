@@ -3,6 +3,7 @@ description: Audit the WorldQuiz UI for design quality, accessibility gaps, resp
 ---
 
 Audit the WorldQuiz UI/UX. Read these files:
+
 - `CSS/style.css` — full design system
 - `index.php` — quiz gameplay page (main experience)
 - `login_form.php` — login page
@@ -16,16 +17,20 @@ Then launch the **ui-reviewer** agent on the full CSS and HTML output.
 After the agent completes, produce a prioritised improvement list:
 
 ## P1 — Broken or inaccessible (fix immediately)
+
 Issues that affect usability or exclude users.
 
 ## P2 — Design consistency gaps
+
 Things that look off compared to the established design system.
 
 ## P3 — Responsive design
+
 The current CSS has no `@media` queries. The `.question-box` is hardcoded at `1000px × 500px`.
 Identify which pages would break on a 768px tablet or 375px mobile screen.
 
 ## P4 — Enhancement opportunities
+
 Improvements that would meaningfully improve the quiz experience without a full redesign.
 
 For each finding: which file/selector, what the issue is, and a concrete suggestion.

@@ -18,7 +18,7 @@ All styles live in `CSS/style.css`. The design is dark-theme only, built with CS
 Font: Poppins (Google Fonts, all weights 100–900). Applied globally via `*`.
 
 | Use | Size | Weight | Letter-spacing |
-|-----|------|--------|----------------|
+| ----- | ------ | -------- | ---------------- |
 | Logo | 1.7rem | 800 | 4px |
 | Page heading | 2.5–2.7rem | 600–800 | 3–4px |
 | Section heading | 1.4–1.8rem | 600–700 | 2–3px |
@@ -28,6 +28,7 @@ Font: Poppins (Google Fonts, all weights 100–900). Applied globally via `*`.
 ## Button patterns
 
 ### Gradient button (nav, start)
+
 ```css
 background: linear-gradient(to bottom, var(--secondary-color), var(--secondary-bg-color), var(--bg-color));
 color: var(--primary-color);
@@ -36,6 +37,7 @@ border-radius: 7px;
 ```
 
 ### Flat primary button (`.btn`)
+
 ```css
 background-color: var(--primary-color);
 color: var(--secondary-bg-color);
@@ -44,6 +46,7 @@ border-radius: 10px;
 ```
 
 ### CTA/action button (`.task-btn`, `.start-btn`)
+
 ```css
 background-color: var(--secondary-color);   /* or var(--edit-color) for primary CTA */
 color: var(--primary-color);
@@ -53,6 +56,7 @@ box-shadow: 5px 5px 10px rgba(164, 179, 232, 0.3);
 ```
 
 ### Delete button
+
 ```css
 background: var(--secondary-color);
 color: var(--primary-color);
@@ -98,11 +102,13 @@ Used for star (`bx-star`), social media icons in the footer.
 ## Known responsive gaps
 
 The current CSS has **no `@media` queries**. These are hardcoded and will break on small screens:
+
 - `.question-box` — `width: 1000px; height: 500px`
 - `.image-box img` — `width: 450px; height: 350px`
 - `.img-box` — `width: 400px; height: 360px`
 - `.form-container form` — `width: 40%` (too narrow on mobile)
 
 When adding responsive support, start with these breakpoints matching the existing fixed widths:
+
 - `max-width: 1100px` — scale down the question box
 - `max-width: 768px` — stack left/main containers vertically, full-width form

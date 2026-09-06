@@ -32,22 +32,26 @@ Font: Poppins (Google Fonts). Icons: Boxicons CDN.
 ## What to review
 
 ### Visual consistency
+
 - Does new UI use the existing custom properties, not hardcoded hex values?
 - Do new buttons follow the established gradient or flat button patterns?
 - Is the letter-spacing and font-weight consistent with the rest of the page?
 
 ### Layout
+
 - Does the layout use flexbox correctly (the project uses flexbox throughout, no grid)?
 - Is the `.question-box` fixed at 1000×500px — would that break on small screens?
 - Are there responsive breakpoints for anything new? (Note: current CSS has no `@media` queries — this is a known gap)
 
 ### Accessibility
+
 - Do interactive elements have hover AND focus states?
 - Is colour contrast sufficient? `--primary-color` (#9fb9f1) on `--secondary-color` (#290f8f) — flag if new combinations are worse
 - Are form inputs associated with `<label>` elements?
 - Are buttons using `<button>` not `<div>` or `<a>`?
 
 ### HTML quality
+
 - Semantic elements: `<header>`, `<main>`, `<nav>`, `<footer>` where appropriate
 - Images: do they have `alt` attributes?
 - Forms: `method="POST"` for state-changing operations?

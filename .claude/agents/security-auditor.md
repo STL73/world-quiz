@@ -38,6 +38,7 @@ You are a security auditor for the WorldQuiz project. You know this codebase's e
 ## Report format
 
 Group findings:
+
 1. Fixed (previously known, now resolved)
 2. Still open (known issues not yet fixed)
 3. New issues found

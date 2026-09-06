@@ -12,16 +12,21 @@ Run a complete review of the WorldQuiz project. Launch all four specialist agent
 After all four agents complete, produce a unified report:
 
 ## CRITICAL
+
 List all CRITICAL findings from all agents. These must be fixed before any commit.
 
 ## HIGH
+
 All HIGH findings. Should be fixed soon.
 
 ## MEDIUM
+
 All MEDIUM findings. Address during refactoring.
 
 ## LOW / Suggestions
+
 All LOW findings and improvement suggestions.
 
 ## Summary
+
 One paragraph: overall health of the codebase and the top three priorities.

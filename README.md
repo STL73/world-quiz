@@ -53,7 +53,7 @@ A geography quiz web app where players identify world landmarks from photographs
 ## Tech stack
 
 | Layer | Choice | Why |
-|---|---|---|
+| --- | --- | --- |
 | **Server** | PHP 8 (procedural, no framework) | Wanted to understand request lifecycle, sessions, and templating before reaching for Laravel. Every page is a `.php` file — file-based routing on Apache. |
 | **Database** | MySQL 8 via MySQLi | Prepared statements throughout. No ORM — write the SQL, learn the SQL. |
 | **Frontend** | Vanilla JavaScript + CSS | No bundler, no framework. Quiz gameplay is AJAX-driven via `fetch()` to small JSON endpoints. |
@@ -129,7 +129,7 @@ user navigates away → save_progress.php (POST JSON)
 ## Screenshots
 
 | Landing | Quiz gameplay | User dashboard | Admin panel |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | ![Landing](docs/screenshots/landing.png) | ![Quiz](docs/screenshots/quiz.png) | ![Dashboard](docs/screenshots/dashboard.png) | ![Admin](docs/screenshots/admin.png) |
 
 > Screenshots pending — capture once deployed or from local development.
@@ -224,7 +224,7 @@ Open `http://localhost/WorldQuiz/` in your browser. The `.htaccess` silently rou
 ## Database schema
 
 | Table | Columns | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `users` | `id`, `name`, `email`, `password`, `user_type` | Passwords are hashed with PHP's `password_hash()` (bcrypt). Email is unique. |
 | `score` | `id` (FK → users), `star_tokens`, `level`, `current_question_id`, `hint_used` | One score row per user. Level is recomputed on every token change as `floor(star_tokens / 100) + 1`. |
 | `countries` | `id`, `country`, `img_path`, `question`, `hint`, `answer1/2/3`, `is_correct1/2/3` | 46 seeded rows. `is_correctN` flags which answer is the right one. |

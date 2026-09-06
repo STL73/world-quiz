@@ -14,6 +14,10 @@ memory/
 # graphify's local cache files (ast, detect, python, uncached)
 .graphify_*
 *.bak
+# Timestamped backups: `*.bak` does not match `CLAUDE.md.bak.20260726-224825`,
+# so two of them sat untracked for months. Added 2026-09-06.
+*.bak.*
+*.bak-*
 *.tmp
 
 # ─── Scratch / one-off ─────────────────────────────────────────────────
