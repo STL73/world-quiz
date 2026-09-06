@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Before doing anything in this project, read this page first:**
 
-- `C:\Users\slavi\Evolving Brain\Projects\Coding\World Quiz.md`
+- `C:\Users\slavi\Evolving Brain\Projects\Coding\world-quiz.md`
 
 It is a single dossier: **compiled truth** on top (current state, blockers, next action) and an
 **append-only timeline** underneath (dated history, every entry cited). Trust its compiled-truth
