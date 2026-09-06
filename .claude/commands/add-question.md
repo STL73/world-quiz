@@ -28,6 +28,4 @@ $stmt->bind_param("sssssssii", $country, $img_path, $hint, $answer1, $answer2, $
 $stmt->execute();
 ```
 
-Note: `is_correct1` and `is_correct2` are bound as strings in `add_question.php` — they should be integers. Flag this if it's still wrong.
-
 After inserting, verify the row appears in `view_questions.php` and the image renders correctly in the quiz.
