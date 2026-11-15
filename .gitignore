@@ -9,10 +9,7 @@ CLAUDE.local.md
 .claude/cache/
 
 # ─── Generated / regenerable ───────────────────────────────────────────
-graphify-out/
 memory/
-# graphify's local cache files (ast, detect, python, uncached)
-.graphify_*
 *.bak
 # Timestamped backups: `*.bak` does not match `CLAUDE.md.bak.20260726-224825`,
 # so two of them sat untracked for months. Added 2026-09-06.
@@ -49,6 +46,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 # package-lock.json — intentionally NOT ignored; lock files should be committed
+
+# ─── Build output ──────────────────────────────────────────────────────
+dist/
 
 # ─── OS pollution ──────────────────────────────────────────────────────
 .DS_Store
