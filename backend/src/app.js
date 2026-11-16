@@ -1,0 +1,20 @@
+import express from 'express';
+import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
+
+import { notFound, errorHandler } from './middleware/errorHandler.js';
+
+// The app without app.listen(), so tests can send it requests without a port
+const app = express();
+
+app.use(helmet());
+app.use(express.json());
+// Fills req.cookies, where the session check will find the session cookie
+app.use(cookieParser());
+
+// Both last: notFound catches every address no router answered, and errorHandler catches
+// everything thrown above it
+app.use(notFound);
+app.use(errorHandler);
+
+export default app;
