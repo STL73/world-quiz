@@ -34,6 +34,8 @@ logs/
 # agent-browser can record HTTP traffic to .har files; treat as runtime
 # debug artifacts, not source.
 *.har
+# Playwright MCP writes page snapshots and console logs here during browser checks
+.playwright-mcp/
 
 # ─── PHP ecosystem (future-proofing if you adopt Composer) ─────────────
 vendor/
