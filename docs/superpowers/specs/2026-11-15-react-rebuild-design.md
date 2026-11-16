@@ -71,11 +71,14 @@ created in phase 2, with the code that uses them. Keys are named after their tab
 
 ### Migration
 
-A one-off script, `backend/scripts/importFromMysql.js`, copies the 46 questions and 3 users from
-MySQL `wq_db` into Neon and uploads the 46 photos to Cloudinary. It lives in `backend/` because it
-needs the backend's packages and database client. Existing `$2y$` bcrypt hashes are expected to verify with bcryptjs; a test
-proves this before anything relies on it. Success means row counts match and every question's image
-loads from Cloudinary.
+A one-off script, `backend/scripts/importFromMysql.js`, copies the 16 countries and 46 questions
+from MySQL `wq_db` into Neon and uploads the 46 photos to Cloudinary. It lives in `backend/`
+because it needs the backend's packages and database client. Success means the country and
+question counts match and every question's image loads from Cloudinary.
+
+Accounts start fresh (decided 2026-11-16): the PHP users were test accounts, so their hashes and
+scores are not copied. `npm run db:seed` creates the admin from `SEED_ADMIN_*` in `.env`, and
+players sign up in the new app.
 
 ## Game rules
 
