@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "db:import": "node scripts/importFromMysql.js",
+    "db:seed": "node src/db/seed.js",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"
