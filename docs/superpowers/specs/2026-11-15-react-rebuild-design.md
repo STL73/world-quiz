@@ -61,14 +61,19 @@ serves the built frontend, so cookies need no cross-site setup.
 | `users` | id, name, email (unique), password_hash, role (`user` / `admin`), created_at | `user_type` becomes a constrained `role` |
 | `sessions` | id, user_id (FK, cascade), token_hash, expires_at | Cookie `sid` holds a random token; only its hash is stored |
 | `scores` | user_id (PK, FK, cascade), star_tokens (default 10), saved_question_id | Level is **calculated**, `floor(star_tokens / 100) + 1`, never stored |
-| `countries` | id, name, region | Region powers "play by region" |
+| `countries` | id, name (unique) | Region, continent and country codes are decided in the world-map design discussion (see New features) |
 | `questions` | id, country_id (FK), image_url, cloudinary_id, question, hint, answer1–3, correct_answer (1–3, CHECK) | One column replaces three `is_correct` flags, so exactly one answer is always correct |
 | `attempts` | id, user_id, question_id, started_at, answered_at, hint_used, correct, tokens_awarded | Server-side timing, hint state and history |
 
+Phase 1 creates `users`, `scores`, `countries` and `questions`. `sessions` and `attempts` are
+created in phase 2, with the code that uses them. Keys are named after their table (`user_id`,
+`question_id`), the `manchester-event` convention.
+
 ### Migration
 
-A one-off script copies the 46 questions and 3 users from MySQL `wq_db` into Neon and uploads the
-46 photos to Cloudinary. Existing `$2y$` bcrypt hashes are expected to verify with bcryptjs; a test
+A one-off script, `backend/scripts/importFromMysql.js`, copies the 46 questions and 3 users from
+MySQL `wq_db` into Neon and uploads the 46 photos to Cloudinary. It lives in `backend/` because it
+needs the backend's packages and database client. Existing `$2y$` bcrypt hashes are expected to verify with bcryptjs; a test
 proves this before anything relies on it. Success means row counts match and every question's image
 loads from Cloudinary.
 
@@ -99,7 +104,10 @@ committed) instead of hardcoded database credentials.
 Built only after the parity version is deployed.
 
 1. **Leaderboard:** players ranked by star tokens, with level shown
-2. **Play by region:** the player picks a region or country before a round; the server filters
+2. **Play by region:** the player picks a region or country before a round; the server filters.
+   Slav's original idea, dropped from the school version for time: the game opens on a world map
+   with country borders, and a chosen country fills with its flag's colours. To be designed in its
+   own discussion before this phase, which also decides how countries are grouped
 3. **Timed rounds:** the server records `started_at` when it sends a question and calculates the
    elapsed time when the answer arrives; the browser countdown is display only. Bonus rules to be
    set in that phase
