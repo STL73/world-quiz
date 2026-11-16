@@ -1,12 +1,18 @@
-# Testing
+# Testing Rules
 
-**No test suite exists yet.** The `tests/` directory is empty and no test framework is configured.
+## Backend
 
-When testing is introduced, this file should describe:
+- **Vitest + Supertest**, `npm test` (once) or `npm run test:watch`, from `backend/`
+- Files: `backend/tests/*.test.js`. Supertest sends requests to `src/app.js` directly, with no
+  port, which is why `server.js` only calls `listen`
+- **Database:** the Neon branch `test` (`TEST_DB_URL`). `tests/setup.js` runs first, points
+  `DB_URL` at it and refuses to run without it, so tests never touch the development database
+- Arcjet is off in tests (`NODE_ENV=test`)
+- Test first: write the test, watch it fail, then write the code
+- Each phase adds tests for its endpoints. Outside services (Cloudinary) are never called; tests
+  replace them with `vi.mock`
 
-- The chosen framework (PHPUnit or Pest for PHP; an E2E runner like Playwright or `agent-browser` for the gameplay loop).
-- Where tests live and how they map to the `src/` structure.
-- Coverage expectations and how to run them locally.
-- Which flows are non-negotiable to cover: login, answer scoring, hint usage, admin question CRUD.
+## Frontend
 
-Until then, manual testing through the browser at `localhost/WorldQuiz/` is the only verification.
+No test runner. Each frontend phase is checked in the browser, and the check is described in the
+phase's plan.

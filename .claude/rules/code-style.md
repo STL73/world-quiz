@@ -1,61 +1,41 @@
 # Code Style
 
-Conventions specific to WorldQuiz. Match the surrounding file when in doubt — the codebase is small and consistent.
+There's no Prettier config. Match the file you're in. The two packages differ:
 
-## PHP
+| Convention | `frontend/` | `backend/` |
+| --- | --- | --- |
+| Quotes | double | single |
+| Semicolons | yes | yes |
+| Indent | 2 spaces | 4 spaces |
+| Trailing commas | yes, multi-line | yes, multi-line |
 
-- **Tags:** open with `<?php`, never the short `<?` form. Closing `?>` is omitted at the end of pure PHP files.
-- **Indentation:** 4 spaces.
-- **Naming:**
-  - Functions: `snake_case` (`get_score`, `display_users`, `csrf_verify_ajax`).
-  - Variables: `snake_case` (`$user_id`, `$is_correct`, `$question_id`). camelCase appears in a few older spots but new code uses snake_case.
-  - Constants: `UPPER_SNAKE_CASE` (rare in this codebase).
-  - Files: `snake_case.php` for pages and endpoints; lowercase for includes.
-- **Strings:** prefer double-quoted strings when interpolating, single-quoted otherwise. No mixing for the sake of consistency within a single line.
-- **Comments:** short `//` comments above non-obvious logic. Multi-line block comments are reserved for the file header when there's a real architecture note to make.
-- **Type hints:** not used in existing code. Don't introduce them piecemeal — would require a full pass.
+## Shared conventions
 
-## JavaScript
+- ES modules everywhere; no CommonJS
+- `const` by default; arrow functions for callbacks, `function` declarations for components and
+  top-level helpers
+- Derive values instead of storing them in extra state
+- Immutable updates: spread or `map`/`filter`, never mutate state or props
+- No `console.log` left in frontend code. The backend's start-up log in `server.js` is fine
+- Lint: ESLint flat config in each package (`eslint.config.js`)
 
-- **Indentation:** 2 spaces.
-- **Naming:**
-  - Variables and functions: `camelCase` (`currentQuestionId`, `showHintMessage`).
-  - Constants: `UPPER_SNAKE_CASE` for module-level immutables.
-  - DOM ids/classes referenced from JS: `kebab-case` (mirrors the HTML/CSS).
-  - Fields received from PHP JSON keep their `snake_case` form (`data.star_tokens`) — do not rename on assignment.
-- **Declarations:** `const` by default, `let` when reassignment is required, never `var`.
-- **Strings:** single quotes by default; template literals when interpolating.
-- **Functions:** named function declarations inside the `DOMContentLoaded` handler. Arrow functions only for short callbacks (`fetch().then(r => r.json())`).
+## Comments
 
-## CSS
+- **One line above each component and exported function** saying what it does, in plain words
+- **A "why" only when the code can't show it**, at most two lines. Don't narrate what the code does
+- **No history in code:** no phase numbers, no dates, no "used to", and no references to the PHP
+  version. Decisions live in `.claude/rules/` and git
+- **Tests are the exception for length:** a comment explaining how a test forces its situation may
+  be as long as it needs
 
-- **Indentation:** 2 spaces.
-- **Selectors:** kebab-case class names. IDs only when JS needs a unique handle.
-- **Custom properties:** defined at `:root` for design tokens (`--color-surface`, `--font-display`). Use the token, never repeat the literal value.
-- **Animation:** prefer `transform` and `opacity` over `width`/`height`/`top`/`left`. Already enforced by the design system; new motion should follow the same rule.
+The full teaching for each file lives in `docs/learning/`, not in comments.
 
-## HTML (inside PHP)
+## JavaScript, not TypeScript
 
-- **Indentation:** 4 spaces.
-- **Attributes:** lowercase, double-quoted. PHP echoes go inside the value (`<body data-user-id="<?php echo (int)$_SESSION['user_id']; ?>">`).
-- **Escaping:** `<?php echo (int) ... ?>` for integers from session/DB; `<?php echo htmlspecialchars(...) ?>` for any string that could contain user input.
-- **CSRF meta tag:** required in every page that issues AJAX.
-
-## SQL
-
-- **Keywords:** UPPERCASE (`SELECT`, `FROM`, `WHERE`, `INNER JOIN`).
-- **Identifiers:** lowercase column and table names (`countries`, `users`, `score`, `star_tokens`).
-- **One statement per `prepare` call.** No semicolon-separated multi-statements.
-- **Always parameterized.** A bare `$conn->query("... $var ...")` is a bug to fix on sight.
+Plain JS/JSX. No `.ts` files or TS-only syntax. JSDoc only where a type genuinely helps a shared
+helper.
 
 ## Commits
 
-Follow the conventional commits format from the global guidelines:
-
-```text
-feat: add hint cooldown
-fix: prevent column-name injection in check_answer
-refactor: move user listing query into display_data
-chore: bump boxicons CDN version
-docs: clarify quiz gameplay loop in CLAUDE.md
-```
+Conventional commits (`feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`). Never commit
+without asking Slav first.

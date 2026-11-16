@@ -1,71 +1,42 @@
 # Backend Rules
 
-WorldQuiz is intentionally procedural PHP — no Composer, no autoloader, no framework, no DI, no DTOs. The global PHP rules in `~/.claude/rules/php/` describe a modern OOP/framework setup; **WorldQuiz overrides them** with the conventions below.
-
 ## Stack constraints
 
-- Plain PHP files served directly by Apache. No Composer, no `vendor/`, no autoloader.
-- MySQLi only (no PDO, no Doctrine, no Eloquent).
-- No `declare(strict_types=1)` — the existing code does not use it; do not introduce it page-by-page.
-- No PSR-12 reformatting passes — match the surrounding file's style when editing.
+- Node.js with **ES modules** (`"type": "module"`): always `import`/`export`, and always include the
+  `.js` extension in relative imports (`./config/env.js`)
+- Express 5
+- PostgreSQL on **Neon**, accessed through **Drizzle ORM** (`drizzle-orm/neon-http`,
+  `@neondatabase/serverless`). No raw SQL strings in route code; query through `db`
+- `dotenv` for config, Zod for validation, Arcjet and `helmet` for security, bcryptjs for passwords,
+  Cloudinary and multer for images. Each is installed in the phase that first uses it
 
-## File-based routing
+## Layout
 
-- Every `.php` file in `src/` is either a page (renders HTML) or a JSON endpoint. There is no router.
-- The root `.htaccess` silently rewrites every URL into `src/`. URLs stay clean (`localhost/WorldQuiz/quiz.php`, not `localhost/WorldQuiz/src/quiz.php`).
-- Page filenames are snake_case (`view_questions.php`, `user_panel.php`). JSON endpoint filenames are also snake_case verbs (`get_question.php`, `check_answer.php`).
-
-## Page structure (protected pages)
-
-Every protected page starts with:
-
-```php
-<?php
-session_start();
-if (!isset($_SESSION['user_id'])) {       // or $_SESSION['admin_name'] for admin pages
-    header("Location: login_form.php");   // or admin_panel.php-friendly equivalent
-    exit();
-}
-require_once 'includes/wq_db_connect.php';
-require_once 'includes/csrf.php';
-require_once 'includes/display_data.php'; // only if the page renders DB data
+```text
+backend/
+├── src/
+│   ├── app.js              the Express app: middleware, routers, error handling
+│   ├── server.js           imports app and calls listen
+│   ├── config/
+│   │   ├── env.js          re-exports env vars (PORT, NODE_ENV, ARCJET_KEY)
+│   │   └── arcjet.js       the one Arcjet client
+│   ├── db/index.js         exports `db` (Drizzle client)
+│   ├── lib/errors.js       AppError
+│   ├── middleware/         errorHandler (+ notFound), security (arcjetProtect, securityMiddleware)
+│   └── routes/<name>.routes.js
+└── tests/                  Vitest + Supertest; setup.js points DB_URL at TEST_DB_URL
 ```
 
-Do not skip the session guard. Do not reorder the requires — `wq_db_connect.php` defines `$conn` and must load first.
+## Config
 
-## JSON endpoint structure
+- Read env vars through `src/config/env.js`. `db/index.js` reads `process.env.DB_URL` directly and
+  throws if it's missing; that fail-fast check is intentional
+- `.env` files are gitignored. Never commit one. `backend/.env.example` lists every variable
 
-Every JSON endpoint starts with:
+## Neon branches
 
-```php
-<?php
-session_start();
-header('Content-Type: application/json');
-require 'includes/wq_db_connect.php';
-require_once 'includes/csrf.php';
-csrf_verify_ajax();
-$data = json_decode(file_get_contents("php://input"), true);
-```
+`main` is production, `dev` is `DB_URL` locally, `test` is `TEST_DB_URL`.
 
-Then validate inputs explicitly, run prepared queries, and `echo json_encode([...])` the response.
+## Commands
 
-## Database access
-
-- **All reads go through `includes/display_data.php`.** Add a new function there rather than putting a `SELECT` inline in a page. Functions use `global $conn;` (intentional for this codebase — do not refactor into DI).
-- **All deletes go through `includes/delete_data.php`** with the same pattern.
-- **Inserts and updates** stay inline in the endpoint or admin page that owns them (e.g. `add_question.php`, `check_answer.php`).
-- **Every query uses a prepared statement** with `bind_param`. String interpolation into SQL is a security regression.
-- When the query needs a dynamic column name (e.g. `is_correct$answer_index`), validate the variable against a fixed allowlist (`in_array($answer_index, [1, 2, 3], true)`) before interpolating.
-
-## Auth and sessions
-
-- User sessions use `$_SESSION['user_id']` and `$_SESSION['user_name']`. Admin sessions use `$_SESSION['admin_name']`.
-- Passwords are stored with `password_hash($pw, PASSWORD_BCRYPT)` and verified with `password_verify`.
-- `session_regenerate_id(true)` runs immediately after successful login, before the redirect.
-- CSRF tokens come from `includes/csrf.php`. Every POST endpoint calls `csrf_verify_ajax()` (AJAX) or checks the form token (HTML form post).
-
-## Protected files
-
-- `src/includes/wq_db_connect.php` — DB credentials live here; do not move or rename.
-- `src/includes/csrf.php` — token generation logic; do not reimplement elsewhere.
-- `src/.htaccess` is implicit via the root `.htaccess` — do not add a second one inside `src/`.
+Run from `backend/`: `npm run dev` (nodemon), `npm start`, `npm test`, `npm run lint`.

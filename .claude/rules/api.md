@@ -1,68 +1,52 @@
 # API Rules
 
-WorldQuiz has no formal REST API — just a small set of AJAX JSON endpoints that power the gameplay loop. Conventions below keep them consistent.
+## Routing
 
-## Existing endpoints
+All routes are versioned under `/api/v1`, one router per resource, mounted in `src/app.js`:
 
-All live in `src/` as individual `.php` files. The frontend calls them via `fetch` from `app.js`.
+| Mount | File and endpoints |
+| --- | --- |
+| `/api/v1/health` | `routes/health.routes.js`: `GET /` (API and database check) |
 
-| Endpoint | Method | Purpose |
-| --- | --- | --- |
-| `get_question.php` | GET (query string) | Return one question by id: `{question, hint, img_path, answer1, answer2, answer3, ...}` |
-| `check_answer.php` | POST (JSON body) | Validate an answer, update score, return correctness and new score |
-| `save_progress.php` | POST (JSON body) | Persist the user's current question id so the quiz resumes on return |
-| `use_hint.php` | POST (JSON body) | Mark the hint as used for the current question; return the hint text |
+- Router files: `const xRouter = Router();` then `export default xRouter;`
+- REST verbs: `GET` list/detail, `POST` create, `PUT` update, `DELETE` remove. Actions that aren't
+  CRUD are a sub-path verb (`/questions/:id/hint`)
 
-## Adding a new endpoint
+## Middleware order
 
-1. Decide if it's a read (GET, query string) or a write (POST, JSON body).
-2. Name the file with a verb-first snake_case name: `get_*.php`, `check_*.php`, `save_*.php`, `delete_*.php`.
-3. Follow the JSON endpoint header pattern in `backend.md`.
-4. Always send `Content-Type: application/json` and respond with `echo json_encode([...])`.
+In `src/app.js`: `helmet()`, then `securityMiddleware` (Arcjet, before the body is parsed), then
+`express.json()`, then `cookieParser()`, then the routers, then `notFound` and `errorHandler`, last.
+Middleware registered after a router never runs for that router's routes.
 
-## Request format
+## Responses and errors
 
-- **GET endpoints** take parameters from `$_GET`. Validate types explicitly (`(int) $_GET['id']`).
-- **POST endpoints** parse the body with `json_decode(file_get_contents("php://input"), true)`. Never read POST data via `$_POST` for these — the frontend sends JSON, not form-encoded.
-- Required keys are checked with `isset($data['key1'], $data['key2'], ...)` before use. Missing keys return an error response immediately, never silently default.
-
-## Response shape
-
-Two consistent shapes — pick one per endpoint and stick to it:
-
-**Success:**
-
-```json
-{ "field1": "value", "field2": 42 }
+```js
+{ data: {...} }                                                  // one item
+{ data: [...], pagination: { page, limit, total, totalPages } }  // a list
+{ error: { message: 'Email already in use', details: [...] } }   // an error
 ```
 
-Direct payload, no `success` wrapper. The presence of expected keys signals success.
+- **No try/catch in routes.** Express 5 passes errors from async routes to `errorHandler`. Throw
+  `new AppError(status, message, details?)` for anything the client should see; anything else
+  becomes a 500 with a generic message, and the real error goes only to the server log
+- **Security:** `config/arcjet.js` makes one Arcjet client (shield, bot detection allowing search
+  engines and link previews). Stricter rules for a route use `aj.withRule()` at module level, run by
+  `arcjetProtect(client, props)`. Rate limit = 429, bot or shield = 403; if Arcjet can't be reached
+  the request goes through. Tests skip Arcjet
+- **Local testing gotcha:** Arcjet caches a denial for about a minute, and locally every request
+  comes from 127.0.0.1. One plain `curl` (classed as a bot) makes every request 403 for that minute,
+  browser included. Send a browser user agent with `curl -A`
 
-**Error:**
+## Status codes
 
-```json
-{ "error": "Human-readable message." }
-```
-
-Always a single `error` key with a short, user-safe string. Never include stack traces, SQL fragments, or internal IDs in the error message.
-
-After echoing an error, call `exit()` so no further output reaches the client.
-
-## Auth and CSRF
-
-- All POST endpoints require a valid CSRF token. Call `csrf_verify_ajax()` immediately after `require_once 'includes/csrf.php'`.
-- GET endpoints that read user-scoped data check `$_SESSION['user_id']` exists and respond with an error if not.
-- Admin-only endpoints check `$_SESSION['admin_name']` instead.
-- Never trust the user id from the request body — read it from `$_SESSION['user_id']`.
-
-## Input validation rules
-
-- **Integers from the request:** cast with `(int)` and check the result is in the expected range.
-- **Indices that map to column names (e.g. `is_correct$n`):** validate with `in_array($n, [allowed], true)` before interpolating.
-- **Strings:** trim and reject empty for required fields; never use the value in SQL outside a prepared statement.
-
-## Frontend contract
-
-- `app.js` reads `<meta name="csrf-token">` once on load and sends it in the `X-CSRF-Token` header on every POST.
-- The frontend expects `error` to be present on failure and absent on success — `if (response.error) { ... }` is the pattern.
-- The frontend never retries failed requests automatically; surface the error message via `showError()`.
+| Code | When |
+| --- | --- |
+| 200 | Read or action with a body |
+| 201 | Something created |
+| 204 | Done, nothing to send |
+| 400 | Invalid input |
+| 401 | Not logged in, or wrong email or password |
+| 403 | Logged in but not allowed, or blocked by Arcjet |
+| 404 | Not found |
+| 409 | Clashes with what exists (email already in use) |
+| 429 | Rate limited |

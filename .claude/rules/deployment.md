@@ -1,14 +1,13 @@
 # Deployment Rules
 
-**No production deployment exists yet.** WorldQuiz currently runs locally via XAMPP at `localhost/WorldQuiz/`.
+No production deployment exists yet. The project runs locally (`npm run dev` in each package).
 
-When the project is deployed, this file should cover:
+Planned (spec, phase 5): Railway runs the Express API, which also serves the built React app from
+`frontend/dist`, so the site has one origin. Neon `main` is the production database.
 
-- The hosting target (shared PHP host, VPS, container platform).
-- How `src/includes/wq_db_connect.php` reads credentials — today they are hardcoded (`localhost`, `root`, empty password, `wq_db`). Any real deploy must move these to environment variables or a non-committed config file.
-- How the database schema and seed data (`database/seed.sql`) are applied.
-- How the `Images/` folder is shipped — it is part of the repo today but may need a separate asset pipeline in production.
-- HTTPS, session cookie flags (`Secure`, `HttpOnly`, `SameSite`), and any production-specific PHP ini settings.
-- A rollback procedure.
+When it's deployed, document here:
 
-Until then, the only deployment step is copying the repo into the web-server document root locally.
+- The Railway service, its build and start commands, and how to roll back
+- Every production environment variable and where it is set
+- How migrations run against the production database
+- Cookie flags in production (`Secure`, `HttpOnly`, `SameSite`)

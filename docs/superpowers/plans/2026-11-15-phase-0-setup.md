@@ -237,9 +237,8 @@ NODE_ENV=development
 DB_URL=
 TEST_DB_URL=
 
-# Arcjet. ARCJET_ENV=development locally only
+# Arcjet. Development mode follows NODE_ENV=development
 ARCJET_KEY=
-ARCJET_ENV=development
 
 # Cloudinary, first used in phase 1
 CLOUDINARY_CLOUD_NAME=
@@ -1184,7 +1183,7 @@ stay short (see `code-style.md`).
 ## Environment variables
 
 `backend/.env`, copied from `backend/.env.example`: `PORT`, `NODE_ENV`, `DB_URL` (Neon `dev`),
-`TEST_DB_URL` (Neon `test`), `ARCJET_KEY`, `ARCJET_ENV`, `CLOUDINARY_*`. Never commit `.env`.
+`TEST_DB_URL` (Neon `test`), `ARCJET_KEY`, `CLOUDINARY_*`. Never commit `.env`.
 
 ## Rules
 
