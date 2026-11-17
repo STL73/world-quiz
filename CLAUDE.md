@@ -45,13 +45,21 @@ stay short (see `code-style.md`).
 - Backend: `cd backend && npm run dev` → `http://localhost:5600`
 - Frontend: `cd frontend && npm run dev` → `http://localhost:5173` (proxies `/api` to the backend)
 - Tests: `cd backend && npm test` (Neon `test` branch)
+- Migrations: see `.claude/rules/backend.md`. The `dev` and `test` branches both have every
+  migration applied
+- Accounts start fresh; the PHP users weren't copied. `cd backend && npm run db:seed` creates the
+  admin from `SEED_ADMIN_*` in `backend/.env`
+- The import from the PHP version: start XAMPP's MySQL, then `cd backend && npm run db:import`
+  (`-- --reset` to empty the questions first). Done once on 2026-11-16 into `dev`: 16 countries,
+  46 questions. The photos are in Cloudinary under `world-quiz/development/questions/`
 - The PHP version: XAMPP on `D:\xampp`, served through the junction `D:\xampp\htdocs\WorldQuiz` at
   `http://localhost/WorldQuiz/`, MySQL database `wq_db`
 
 ## Environment variables
 
 `backend/.env`, copied from `backend/.env.example`: `PORT`, `NODE_ENV`, `DB_URL` (Neon `dev`),
-`TEST_DB_URL` (Neon `test`), `ARCJET_KEY`, `CLOUDINARY_*`. Never commit `.env`.
+`TEST_DB_URL` (Neon `test`), `ARCJET_KEY`, `CLOUDINARY_*`, `SEED_ADMIN_*`, `MYSQL_URL` (the
+import; empty for XAMPP's default). Never commit `.env`.
 
 ## Rules
 
