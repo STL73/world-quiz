@@ -106,7 +106,8 @@ Rules in the database:
 
 Changes to existing tables, in one new migration whose SQL Slav sees before it is applied:
 
-- `scores.star_tokens` defaults to 0 instead of 10
+- `scores.star_tokens` defaults to 0 instead of 10. Moved to phase 2a on 2026-11-17, because
+  sign-up is where the score row is made (`2026-11-17-phase-2a-auth.md`)
 - `scores.saved_question_id` is dropped: the active round is the saved place
 - These two tables replace the `attempts` table the rebuild spec planned
 
