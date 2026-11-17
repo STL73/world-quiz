@@ -20,7 +20,7 @@ redesign in `src/` stays in place until the cutover phase.
 | Shape | Vite React frontend + Express REST API; React never talks to the database |
 | Tools | Match `manchester-event` (listed under Stack) |
 | Auth | Own auth in Express, the `manchester-event` session pattern |
-| Scope | New look **and** four new features, built after the app reaches parity |
+| Scope | New look **and** four new features, built after the app reaches parity. Revised 2026-11-17: a new core game replaces parity, and more features follow (`2026-11-17-core-game-design.md`) |
 | Learning | Every file explained one at a time; notes saved to `docs/learning/` |
 
 ## Stack
@@ -63,10 +63,10 @@ serves the built frontend, so cookies need no cross-site setup.
 | `scores` | user_id (PK, FK, cascade), star_tokens (default 10), saved_question_id | Level is **calculated**, `floor(star_tokens / 100) + 1`, never stored |
 | `countries` | id, name (unique) | Region, continent and country codes are decided in the world-map design discussion (see New features) |
 | `questions` | id, country_id (FK), image_url, cloudinary_id, question, hint, answer1–3, correct_answer (1–3, CHECK) | One column replaces three `is_correct` flags, so exactly one answer is always correct |
-| `attempts` | id, user_id, question_id, started_at, answered_at, hint_used, correct, tokens_awarded | Server-side timing, hint state and history |
+| `attempts` | id, user_id, question_id, started_at, answered_at, hint_used, correct, tokens_awarded | Replaced 2026-11-17 by `rounds` and `round_questions`, and `saved_question_id` is dropped (`2026-11-17-core-game-design.md`) |
 
-Phase 1 creates `users`, `scores`, `countries` and `questions`. `sessions` and `attempts` are
-created in phase 2, with the code that uses them. Keys are named after their table (`user_id`,
+Phase 1 creates `users`, `scores`, `countries` and `questions`. `sessions` is created in phase 2a,
+and `rounds` and `round_questions` in phase 2b, with the code that uses them. Keys are named after their table (`user_id`,
 `question_id`), the `manchester-event` convention.
 
 ### Migration
@@ -81,6 +81,9 @@ scores are not copied. `npm run db:seed` creates the admin from `SEED_ADMIN_*` i
 players sign up in the new app.
 
 ## Game rules
+
+> Superseded 2026-11-17: the core game (rounds, new scoring, streaks, shuffled answers) is in
+> `2026-11-17-core-game-design.md`. The parity rules below record the PHP behaviour.
 
 Parity rules, taken from the PHP code on 2026-11-15:
 
@@ -104,7 +107,8 @@ committed) instead of hardcoded database credentials.
 
 ## New features
 
-Built only after the parity version is deployed.
+Built only after the parity version is deployed. Revised 2026-11-17: after the core game is
+deployed, and joined by content, fact cards and collections (`2026-11-17-core-game-design.md`).
 
 1. **Leaderboard:** players ranked by star tokens, with level shown
 2. **Play by region:** the player picks a region or country before a round; the server filters.
@@ -129,6 +133,10 @@ Built only after the parity version is deployed.
 - Slav sets the pace and can stop for a deeper dive at any point
 
 ## Phases
+
+> Superseded 2026-11-17 by the phase table in `2026-11-17-core-game-design.md`: phase 2 is split
+> into auth, core game and admin CRUD, cutover moves up, and content, fact cards and collections
+> are added. About 40–60 sessions in all.
 
 | # | Phase | Sessions (2–3 h) |
 | --- | --- | --- |
