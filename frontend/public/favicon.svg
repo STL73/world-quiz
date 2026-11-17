@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Placeholder globe until the visual direction is chosen -->
+  <circle cx="16" cy="16" r="14" fill="#0f766e" />
+  <g fill="none" stroke="#ecfeff" stroke-width="1.6">
+    <ellipse cx="16" cy="16" rx="6" ry="14" />
+    <path d="M2 16h28M5 9h22M5 23h22" />
+  </g>
+</svg>
