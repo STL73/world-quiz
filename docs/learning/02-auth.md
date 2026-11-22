@@ -108,3 +108,44 @@ addTestUser({ name: 'Al' })   // the usual test user, but named 'Al'
 
 The capitals test gives its second user a different email. With the same email, the email rule
 would refuse the insert with `23505` too, and the test would pass for the wrong reason.
+
+## The tokens
+
+### `src/lib/tokens.js`
+
+Two functions, used by the sessions code later in this phase.
+
+**`newToken()`** takes nothing and returns `{ token, hash }`. `crypto.randomBytes(32)` asks the
+operating system's secure random source for 32 bytes, and `.toString('hex')` writes each byte as
+two characters, so the token is 64 characters. A real run:
+
+```text
+token  9a0ae312e8beee3d9d861618b041da18615d4f5090d87a121504619d19603a7f   → the sid cookie
+hash   729e1310771d02398336f2158b878c80a12d6d2c236b1dfc990a72789a0ebd32   → sessions.session_id
+```
+
+32 bytes is 256 bits, about 10⁷⁷ possible tokens, so guessing one is hopeless. `Math.random()` is
+predictable and is never used for this.
+
+**`hashToken(token)`** takes a string and returns its SHA-256 hash as 64 hex characters. The same
+input always gives the same output, which is how a cookie finds its row: at login the hash is
+stored, and on every later request the cookie is hashed again and looked up.
+
+**Why SHA-256 here and bcrypt for passwords:**
+
+| | A token | A password |
+| --- | --- | --- |
+| Chosen by | the computer, 256 random bits | a person, often guessable |
+| An attacker holding the hash tries | 10⁷⁷ possibilities | a list of common passwords |
+| So the hash should be | fast: SHA-256, microseconds | slow: bcrypt cost 12, about a quarter of a second |
+
+A slow hash only helps when the input can be guessed. A token can't, so slowing it would only slow
+every request.
+
+### `tests/tokens.test.js`
+
+Three tests: the token is 64 hex characters and its hash matches `hashToken`, two tokens are never
+the same, and `hashToken('abc')` equals the SHA-256 of "abc" published in the standard. The last
+one matters because the first only checks `hashToken` against itself: a function returning its
+input unchanged would pass it. Checking against a known value is weighing a known 1 kg weight
+rather than trusting the scales to check themselves.
