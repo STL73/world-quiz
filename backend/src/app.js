@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import healthRouter from './routes/health.routes.js';
+import authRouter from './routes/auth.routes.js';
 import { securityMiddleware } from './middleware/security.js';
 
 // The app without app.listen(), so tests can send it requests without a port
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
 
 // Both last: notFound catches every address no router answered, and errorHandler catches
 // everything thrown above it

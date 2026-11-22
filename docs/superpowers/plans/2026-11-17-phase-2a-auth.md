@@ -1183,6 +1183,12 @@ enters the chat. Expected: login and `/me` answer the admin with `role: "admin"`
 `204`; the last `/me` answers 401. Delete `jar.txt`. Stop the server, then check port 5600 is free
 and that no `node` process for `src/server.js` is left (`Resources/Gotchas.md`).
 
+*Revised 2026-11-22, with Slav.* A `!` command's text is shown in the chat, so typing the password
+into it would not have kept it out. The check ran as a short Node script instead, reading
+`SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` from `backend/.env` and printing only the responses,
+which needs no `jar.txt`. Stopping the background `npm run dev` left nodemon and the server
+running on 5600, as `Gotchas.md` warns; both were stopped by process ID.
+
 - [ ] **Step 8: Ask to commit**
 
 Explain: each route walked through with real data (Maria signs up, logs in on a second device,

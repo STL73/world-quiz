@@ -413,3 +413,92 @@ When Arcjet's email rule refuses an address (disposable, invalid, or a domain wi
 server), the answer is now `fieldError(400, 'email', ...)` instead of a plain `403 Request
 blocked`, so the sign-up form shows it under the email box. It is a 400 because nothing was
 blocked: the person only needs another address. A rate limit or a bot is still checked first.
+
+## The routes
+
+### `src/routes/auth.routes.js`
+
+Two stricter Arcjet guards are made once, when the file loads (both are `null` in tests, and
+`arcjetProtect` lets a request through without one):
+
+- **`signUpGuard`**: refuses disposable, invalid and no-mail-server emails, refuses every bot (a
+  search engine has no reason to sign up), and allows 5 sign-ups an hour from one address
+- **`loginGuard`**: 10 attempts in any 15 minutes. Plenty for someone mistyping, far too few for a
+  script guessing thousands of passwords
+
+**`POST /sign-up`**: `validate`, then Arcjet, then the handler.
+
+```text
+body  { name: ' Maria ', email: 'Maria@Example.com', password: 'correct horse' }
+→ validate      req.valid.body = { name: 'Maria', email: 'maria@example.com', ... }
+→ Arcjet        checks maria@example.com, 5 an hour, bots
+→ createPlayer  a users row and a 0-token scores row, in one batch
+→ startSession  a sessions row (the hash), and Set-Cookie: sid=<token>; HttpOnly; SameSite=Lax
+← 201 { data: { userId, name: 'Maria', email: 'maria@example.com', role: 'user', createdAt } }
+```
+
+Validation comes first here because Arcjet's email check wants the cleaned address, and
+`req.valid.body.email` exists only after `validate` has run.
+
+**`POST /login`**: Arcjet, then `validate`, then the handler. The order is reversed because Arcjet
+needs nothing from the body, so a blocked request (the 11th in 15 minutes) is turned away before any
+parsing or database work. Maria logs in on her phone with `MARIA@example.com`: the email is cleaned,
+her row found, `checkPassword` run (always, even with no row, as in the passwords section), and a
+second session row made. Her laptop stays logged in. A wrong email and a wrong password both get
+`401 Email or password is incorrect`.
+
+**`POST /logout`**: Maria logs out on the laptop. `endSession` deletes that device's row and clears
+its cookie; the phone's row is another row and stays. 204, done with nothing to send, and 204 even
+with no cookie, so the frontend can always call it.
+
+**`GET /me`**: `requireAuth`, then `publicUser(req.user)`. When the React app loads it asks this:
+200 shows the player's name, 401 shows the login page.
+
+No route has a try/catch: everything thrown, from `validate`, Arcjet, `createPlayer` or the 401,
+reaches `errorHandler`.
+
+### `src/app.js`
+
+`app.use('/api/v1/auth', authRouter)`, after `cookieParser()` (so `req.cookies` is filled) and
+before `notFound`.
+
+### `tests/auth.test.js`
+
+Fifteen tests through the real app with Supertest. Before the router was mounted, every one failed
+on a 404. The tools at the top:
+
+| Helper | Gives |
+| --- | --- |
+| `newPlayer()` | a new name and email every call, so tests never clash with each other or an earlier run |
+| `signUp()` | signs up through the API with `request.agent(app)`, which keeps cookies like a browser |
+| `addAdmin()` | an admin inserted straight into the database, the way the seed makes one |
+| `PASSWORD` | written out, not imported, so a wrong value in the app can't make a test agree |
+| `afterAll` | deletes every `auth-test-` user; scores and sessions go with them |
+
+What they prove: sign-up gives 201, a 0-token score, a working `/me`, no hash in the response, an
+`HttpOnly` and `SameSite=Lax` cookie whose hash alone is stored, a cleaned email and name, a player
+even when the body asks for admin, a 409 on the right field for a taken email or name, and one 400
+listing every problem. Every login makes a new session (3 rows after a sign-up and two logins). A
+wrong password and an unknown email get the same 401 and no cookie. Logout deletes the row. An
+expired session is refused and its cookie cleared; one with 10 days left is moved past 29. The
+tests make time pass by editing `expires_at`, not by waiting.
+
+The `requireRole` test builds a small app with one admin-only route, because no admin routes exist
+yet and the guard has to be proven before they do. Its users sign in through the real API, and
+their cookies are sent to the small app.
+
+### The live check
+
+With the server running and Arcjet on, against `dev`:
+
+```text
+login   200  { userId: 1, role: "admin", ... }   no password hash
+cookie  sid=<token>; Max-Age=2592000; Path=/; Expires=<30 days on>; HttpOnly; SameSite=Lax
+me      200  the admin, found from the cookie alone
+logout  204
+me      401  "Please log in to continue"
+wrong   401  "Email or password is incorrect"
+```
+
+`Max-Age=2592000` is 30 days in seconds. The password came from `SEED_ADMIN_PASSWORD` in
+`backend/.env` and was never printed.
