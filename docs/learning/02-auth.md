@@ -285,3 +285,73 @@ Six tests, none touching the database: the clean-up, the name and password lengt
 a non-address, the dropped `role`, and a login password that is short but not empty. `signUpOk`
 changes one field of a good sign-up at a time, so a failure points at exactly one rule.
 `fieldError` and `validate` are proven through the routes, in the route tests.
+
+## Sessions and the guards
+
+Neither file has a test of its own: the route tests send a real cookie through both.
+
+### `src/lib/sessions.js`
+
+The life of a session:
+
+```text
+day 0    log in    startSession        row ends day 30, cookie lasts 30 days
+day 10   play      findSession ✓       20 days left, more than 15: nothing changes
+day 20   play      findSession ✓       10 days left: renewSessionIfDue moves the end to day 50
+                                       and sends the cookie again
+day 81   come back findSession ✗       it ended on day 50: 401, "Please log in to continue"
+```
+
+Anyone who plays at least once every 15 days stays logged in. Renewing only when fewer than 15
+days are left keeps most requests to a single read.
+
+| Function | Does | Used by |
+| --- | --- | --- |
+| `startSession(res, userId)` | `newToken()`, stores the hash with an end 30 days ahead, puts the token in the `sid` cookie | sign-up, login |
+| `findSession(token)` | hashes the cookie, finds a row that matches and hasn't ended, joined to its user: `{ session, user }` or `null` | `requireAuth` |
+| `renewSessionIfDue(res, token, session)` | with fewer than 15 days left, moves the end to 30 days ahead and sends the cookie again | `requireAuth` |
+| `endSession(res, token)` | deletes this device's row and clears the cookie | logout |
+| `clearSessionCookie(res)` | tells the browser to forget `sid` | logout, `requireAuth` |
+
+`findSession` uses an inner join, so one query brings back the session and the user together: one
+trip to Neon per request instead of two.
+
+**The cookie's flags, and what each stops:**
+
+| Flag | Means | Stops |
+| --- | --- | --- |
+| `httpOnly` | page scripts can't read it | XSS theft: a script injected into the page still can't read `sid` and send it away |
+| `sameSite: 'lax'` | sent when you follow a link here, not with a form posted from another site | CSRF: a hidden form on an evil page posts without your cookie, so it arrives logged out |
+| `secure` in production | sent only over HTTPS | someone on the same Wi-Fi reading it on the way. Off locally, where `localhost` is plain HTTP |
+| `maxAge` 30 days | when the browser drops it | (matches the row's `expires_at`) |
+
+**Session fixation.** An attacker gets a session ID into your browser before you log in, on a
+shared computer for instance. If logging in upgraded that same session, the attacker would share
+your logged-in one. `startSession` makes a new random token at every login, so anything planted
+before is worthless.
+
+### `src/middleware/auth.js`
+
+**`requireAuth`** reads the `sid` cookie and asks `findSession`. Nothing found: it clears the
+cookie, if one was sent, so the browser stops sending a dead one, and answers 401. Found: it renews
+if due, puts the user on `req.user` and calls `next()`. `req.user` is the whole row, password hash
+included; it stays on the server, and responses are built from `publicUser`, never from `req.user`.
+
+**`requireRole(...roles)`** builds a middleware; `...roles` gathers its arguments into a list. A
+role not on the list gets 403. 401 is "I don't know who you are"; 403 is "I know, and no".
+
+Middleware is a chain: each one passes the request on with `next()` or stops it by throwing.
+
+```js
+router.get('/users', requireAuth, requireRole('admin'), listUsers);
+```
+
+| Caller | `requireAuth` | `requireRole('admin')` | `listUsers` |
+| --- | --- | --- | --- |
+| no cookie | 401, stops | | |
+| Maria, a player | passes, `req.user` is Maria | 403, stops | |
+| the admin | passes | passes | runs |
+
+`requireRole` reads what `requireAuth` set, so the order matters. Hiding the admin link in React is
+tidiness, not security: anyone can send the request with `curl`, and this check on the server is
+the lock.
