@@ -8,3 +8,11 @@ export class AppError extends Error {
         this.details = details;
     }
 }
+
+// An error shown under one form field, `field` being the body's name for it
+export function fieldError(status, field, message) {
+    return new AppError(status, message, [{ path: `body.${field}`, message }]);
+}
+
+// A broken UNIQUE rule. Drizzle keeps Postgres's own error on `cause`
+export const isUniqueViolation = (error) => (error.code ?? error.cause?.code) === '23505';

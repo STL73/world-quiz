@@ -199,3 +199,89 @@ Three new tests: the right password gives `true`, a password one letter off give
 hash at all gives `false` without throwing. The equal timing isn't asserted in a test, because a
 test that depends on milliseconds fails at random on a busy machine. It was measured by hand
 instead, with the figures above.
+
+## Validation
+
+Four files: the rules, two error helpers, and the middleware that runs the rules on each request.
+
+### `src/validation/auth.js`
+
+A Zod schema is a chain of steps, like a production line: each one reshapes the value or rejects
+it with a message. `email`, given `' Maria@Example.COM '`:
+
+```text
+z.string(...)      is it text at all?            ' Maria@Example.COM '   ✓
+.trim()            cut spaces at both ends    →  'Maria@Example.COM'
+.toLowerCase()                                →  'maria@example.com'
+.min(1, ...)       not empty?                                            ✓
+.pipe(z.email()    a real address shape?                                 ✓
+      .max(255))   fits the column?                                      ✓
+```
+
+`.pipe` hands the cleaned value to a second schema, so the address check sees it after trimming.
+
+- **`name`**: trimmed, then 3 to 20 characters, the same range as the database rules but with
+  messages a person can read. Trimming comes first, so `'  Al  '` is a 2-character name
+- **`newPassword`**: 8 to 72 characters and never trimmed, since spaces can be part of a password.
+  bcrypt reads only the first 72 bytes, so a longer one is refused rather than silently cut
+- **`currentPassword`**: anything not empty. The rules apply when a password is chosen; at login
+  only the hash decides, and refusing a short one would only tell a stranger the rules
+- **`signUpSchema`** has no `role`. A Zod object keeps only the fields it lists, so a sign-up sent
+  with `"role": "admin"` comes out as a plain player
+
+`parse` returns the clean data or throws. `safeParse` returns `{ success, data }` or
+`{ success: false, error }` and never throws, so every problem can be collected.
+
+A real run with `{ name: '  Al ', email: 'maria', password: 'short' }` gives one issue per field:
+
+```text
+name      Use at least 3 characters.
+email     Enter an email address like name@example.com.
+password  Use at least 8 characters.
+```
+
+### `src/lib/errors.js`
+
+Two helpers next to `AppError`:
+
+- **`fieldError(status, field, message)`** makes an error tied to one form field, for problems Zod
+  can't see, like an email already in use. Its `details` look exactly like Zod's:
+  `[{ path: 'body.email', message }]`, so a form puts the message under the right box whichever
+  one produced it
+- **`isUniqueViolation(error)`** is `true` for Postgres's `23505`. `error.code ?? error.cause?.code`
+  reads the code on the error or, as Drizzle wraps it, on its `cause`; `?.` gives `undefined`
+  instead of crashing when there is no `cause`. Sign-up uses it when two people take the same name
+  at the same moment and the unique index stops the second
+
+### `src/middleware/validate.js`
+
+`validate(schemas)` builds a middleware. Given `{ body: signUpSchema }`, on each request it:
+
+1. runs `safeParse` on `req.body` (an absent part is checked as `{}`)
+2. keeps the cleaned data in `valid.body`, or adds every issue to `details` with the part's name in
+   front: `['email']` becomes `'body.email'`
+3. throws a 400 `AppError` if anything failed, which `errorHandler` sends; otherwise sets
+   `req.valid` and calls `next()`
+
+Tried on a throwaway app, a good sign-up with `role: 'admin'` added came back as:
+
+```text
+200  req.valid.body = { name: 'Maria', email: 'maria@example.com', password: 'correct horse' }
+     req.body.role  = 'admin'
+```
+
+The raw `req.body` still holds the role. Zod leaves out what it doesn't list from its clean copy,
+not from the original, which is why routes read only `req.valid`. A body with a short name, a bad
+email and no password came back as one 400 with all three problems in `details`, so a form can mark
+every box at once.
+
+It works like a security desk: it checks your pass against the list and either hands you a visitor
+badge (`req.valid`) or turns you away with a note of everything wrong. The rooms inside only look
+at the badge.
+
+### `tests/validation.test.js`
+
+Six tests, none touching the database: the clean-up, the name and password lengths at both edges,
+a non-address, the dropped `role`, and a login password that is short but not empty. `signUpOk`
+changes one field of a good sign-up at a time, so a failure points at exactly one rule.
+`fieldError` and `validate` are proven through the routes, in the route tests.
