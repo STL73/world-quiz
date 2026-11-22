@@ -355,3 +355,61 @@ router.get('/users', requireAuth, requireRole('admin'), listUsers);
 `requireRole` reads what `requireAuth` set, so the order matters. Hiding the admin link in React is
 tidiness, not security: anyone can send the request with `curl`, and this check on the server is
 the lock.
+
+## Accounts
+
+### `src/lib/accounts.js`
+
+**`publicUser(user)`** takes a users row and returns the five fields the frontend may see. It lists
+what to keep rather than removing the hash: if a later phase adds a secret column, a "copy all but
+the hash" version would start sending it without anyone noticing, while a list keeps it private
+until someone adds it on purpose.
+
+**`createPlayer({ name, email, password })`** returns the new user, or throws a 409 on the field
+that clashed:
+
+1. The password is hashed first, outside the database work, so the transaction stays short
+2. One `db.batch()` sends two inserts to Neon together, run as one transaction: both or neither.
+   The user goes in with `.returning()`; the score row's `user_id` comes from a subquery, because
+   the new id doesn't exist until the first insert has run:
+
+   ```sql
+   insert into "scores" ("user_id", "star_tokens", "saved_question_id")
+   values ((select "users"."user_id" from "users" where "users"."email" = $1), default, default)
+   ```
+
+   The email is a parameter (`$1`), and the two columns left out take the database's defaults
+3. `const [[user]]`: a batch returns one result per statement, `[[userRow], scoreResult]`. The outer
+   brackets take the first statement's result, the inner ones its first row
+
+The plan had `db.insert(scores).select(...)` here. Drizzle 0.45.4 has it, but only for a select
+that lists every column of the table in order, which would put the 0-token default in the code as
+well as the schema. The subquery leaves the defaults to the database.
+
+**A batch really is one transaction.** Checked on the `test` branch: a batch whose user insert
+worked and whose score insert then failed left no user behind. A sign-up whose name is taken fails
+on the first insert, so nothing at all is left.
+
+**Why the database decides a clash, not a lookup first:**
+
+```text
+17:00:00.000  Ana's sign-up:  is "Maria" free?  → yes
+17:00:00.001  Ben's sign-up:  is "Maria" free?  → yes
+17:00:00.300  Ana's insert    ✓
+17:00:00.301  Ben's insert    ✓   two Marias, if the app had only checked
+```
+
+The unique index can't be raced: Postgres lets exactly one through. So `createPlayer` tries the
+insert, and only after a `23505` asks which rule broke: a lookup by email gives the email message,
+otherwise it was the name. Any other error is thrown on and becomes a 500.
+
+A real run on `test`: a sign-up gave a player with 0 tokens; the same email again gave
+`409 body.email`; "PROBE ONE" with a new email gave `409 body.name`; afterwards the first player
+was still the only one.
+
+### `src/middleware/security.js`
+
+When Arcjet's email rule refuses an address (disposable, invalid, or a domain with no mail
+server), the answer is now `fieldError(400, 'email', ...)` instead of a plain `403 Request
+blocked`, so the sign-up form shows it under the email box. It is a 400 because nothing was
+blocked: the person only needs another address. A rate limit or a bot is still checked first.

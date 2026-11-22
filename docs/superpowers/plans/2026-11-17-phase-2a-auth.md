@@ -754,7 +754,7 @@ Proven through the routes in Task 8.
 - [ ] **Step 1: Write `backend/src/lib/accounts.js`**
 
 ```js
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 import { users, scores } from '../db/schema/index.js';
@@ -779,7 +779,10 @@ export async function createPlayer({ name, email, password }) {
         // One batch, one transaction: there is never a player without a score row
         const [[user]] = await db.batch([
             db.insert(users).values({ name, email, passwordHash }).returning(),
-            db.insert(scores).select(db.select({ userId: users.userId }).from(users).where(eq(users.email, email))),
+            // The new user's id isn't known until the first insert runs, so a subquery finds it
+            db.insert(scores).values({
+                userId: sql`(select ${users.userId} from ${users} where ${users.email} = ${email})`,
+            }),
         ]);
         return user;
     } catch (error) {
@@ -792,8 +795,13 @@ export async function createPlayer({ name, email, password }) {
 }
 ```
 
-If `db.insert(scores).select(...)` is reported as not a function, Drizzle 0.45 lacks insert-from-
-select on this driver: stop and revise the plan with Slav rather than writing raw SQL in place.
+*Revised 2026-11-22, with Slav.* The plan first used `db.insert(scores).select(...)`. Drizzle
+0.45.4 has it, but refuses a select that doesn't list every column of the table in order
+(`Insert select error: selected fields are not the same...`). Listing all three would write the
+0-token default into code as well as the schema, so the score insert takes the user's id from a
+parameterised subquery instead, and the columns left out get their database defaults. Checked on
+the `test` branch: the score row starts at 0, and a batch whose second statement fails leaves no
+user behind, so the batch is one transaction.
 
 - [ ] **Step 2: Report an email Arcjet refuses under the email field**
 
@@ -822,7 +830,7 @@ Expected: no errors.
 Explain: why `publicUser` lists fields instead of removing the hash (a column added later stays
 private unless someone adds it here); a batch as one transaction, with the walk-through of a
 sign-up whose name is taken (the user insert fails, the score insert never commits, nothing is
-left); insert-from-select; why the database, not an earlier lookup, decides a clash (two sign-ups
+left); the subquery that finds the new user's id; why the database, not an earlier lookup, decides a clash (two sign-ups
 at the same moment).
 
 Message: `feat: add player accounts`
