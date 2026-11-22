@@ -149,3 +149,53 @@ the same, and `hashToken('abc')` equals the SHA-256 of "abc" published in the st
 one matters because the first only checks `hashToken` against itself: a function returning its
 input unchanged would pass it. Checking against a known value is weighing a known 1 kg weight
 rather than trusting the scales to check themselves.
+
+## Checking a password
+
+### `src/lib/passwords.js`
+
+`hashPassword` came in phase 1. This phase adds `checkPassword(password, hash)`: it takes what
+someone typed and the hash stored for their account, and returns `true` or `false`.
+
+```js
+const matches = await bcrypt.compare(password, hash ?? DUMMY_HASH);
+return Boolean(hash) && matches;
+```
+
+When the email has no account, the login route has no hash and passes `undefined`. Calling
+`bcrypt.compare` with `undefined` would throw, so `??` swaps in `DUMMY_HASH`: "use `hash`, unless
+it is `null` or `undefined`". Then `Boolean(hash) && matches` makes sure the answer can only be
+`true` when a real hash was there, even if someone typed the dummy's password.
+
+**Why compare against a dummy instead of answering `false` at once: a timing attack.** The tests
+ran before the function existed, and the times showed the problem. A real check took about 320 ms;
+failing straight away took 2 ms. A login route built like that gives the secret away by speed:
+
+```text
+maria@example.com,  wrong password  →  answer in 320 ms  →  "this email has an account"
+nobody@example.com, wrong password  →  answer in   5 ms  →  "no account here"
+```
+
+The messages are the same, but the stopwatch tells an attacker which emails are worth guessing
+passwords for. With the dummy, all three cases take the same time:
+
+```text
+right password   true   314 ms
+wrong password   false  294 ms
+no account       false  279 ms
+```
+
+The 20 to 30 ms between them is ordinary noise from whatever else the computer is doing.
+
+**`DUMMY_HASH` is made once, at start-up.** It sits at the top level of the module, so it runs when
+the file is first imported: about 0.3 seconds, once. Made inside `checkPassword`, every unknown
+email would pay for a hash *and* a compare, and be slower than a real login: a new gap in the other
+direction. `hashSync` blocks while it works, which a server normally avoids, but it finishes before
+any request arrives.
+
+### `tests/passwords.test.js`
+
+Three new tests: the right password gives `true`, a password one letter off gives `false`, and no
+hash at all gives `false` without throwing. The equal timing isn't asserted in a test, because a
+test that depends on milliseconds fails at random on a busy machine. It was measured by hand
+instead, with the figures above.
