@@ -13,6 +13,9 @@
   replace them with `vi.mock`
 - Tests that write to the `test` branch use their own recognisable values (`schema-test@example.com`)
   and delete them in `afterEach`, so the branch stays empty between runs
+- Route tests that need a logged-in user sign up through the API with `request.agent(app)`, which
+  keeps the cookie like a browser. Accounts use a recognisable email prefix (`auth-test-`) and
+  are deleted in `afterAll`
 - A database rule is tested by breaking it and checking Postgres's error code on `error.cause.code`
   (`23505` UNIQUE, `23514` CHECK, `23503` foreign key)
 - Logic with no database or network (`scripts/transform.js`) is kept in its own file so it can be

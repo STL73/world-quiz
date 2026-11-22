@@ -502,3 +502,132 @@ wrong   401  "Email or password is incorrect"
 
 `Max-Age=2592000` is 30 days in seconds. The password came from `SEED_ADMIN_PASSWORD` in
 `backend/.env` and was never printed.
+
+## How the files connect
+
+Any request to a route behind the guards, here a future admin page:
+
+```text
+browser ── Cookie: sid=9a0a…7f ──▶ app.js: helmet → Arcjet → express.json → cookieParser
+                                      │  req.cookies.sid = '9a0a…7f'
+                                      ▼
+                                  requireAuth            middleware/auth.js
+                                      │
+                                      ▼
+                                  findSession(token)     lib/sessions.js
+                                      │  hashToken → '729e…32'            lib/tokens.js
+                                      ▼
+                                  sessions ⋈ users       one query: hash matches, not expired
+                                      │  none? clear the cookie → 401
+                                      ▼
+                                  renewSessionIfDue      fewer than 15 days left? → day 30 again
+                                      │
+                                      ▼
+                                  req.user = { userId: 1, role: 'admin', ... }
+                                      │
+                                      ▼
+                                  requireRole('admin')   a player? → 403
+                                      │
+                                      ▼
+                                  the route              answers with publicUser(...), never req.user
+```
+
+Anything thrown on the way goes to `errorHandler`, which sends `{ error: { message, details } }`.
+
+## One request end to end: Maria signs up
+
+```text
+POST /api/v1/auth/sign-up
+Content-Type: application/json
+
+{ "name": "  Maria ", "email": "Maria@Example.com", "password": "correct horse", "role": "admin" }
+```
+
+1. **`helmet()`** adds the security headers to the response that will be sent
+2. **`securityMiddleware`**, Arcjet's base rules: no attack pattern in the request, and a browser
+   rather than a script. Passed
+3. **`express.json()`** turns the body into `req.body`, and **`cookieParser()`** fills
+   `req.cookies`, empty for a new visitor
+4. The router matches `POST /sign-up`. **`validate({ body: signUpSchema })`** makes
+   `req.valid.body = { name: 'Maria', email: 'maria@example.com', password: 'correct horse' }`:
+   trimmed, lowercased, and without `role`
+5. **`arcjetProtect(signUpGuard, ...)`** checks `maria@example.com` is a real, non-disposable
+   address with a mail server, that this IP hasn't signed up 5 times this hour, and that it isn't a
+   bot. Passed
+6. **`createPlayer`** hashes the password with bcrypt (about 0.3 s), then sends one batch: the
+   users row, and a scores row whose `user_id` a subquery finds. Postgres checks the name is 3 to 20
+   characters and that no `lower(name)` is already `maria`. Both rows commit together: user 7,
+   0 tokens
+7. **`startSession(res, 7)`** makes a 64-character random token, stores its SHA-256 hash with an
+   end 30 days ahead, and sets the cookie
+8. **The handler** answers:
+
+```text
+HTTP/1.1 201 Created
+Set-Cookie: sid=<64 hex characters>; Max-Age=2592000; Path=/; Expires=<30 days on>; HttpOnly; SameSite=Lax
+Content-Type: application/json
+
+{ "data": { "userId": 7, "name": "Maria", "email": "maria@example.com", "role": "user", "createdAt": "..." } }
+```
+
+Her browser keeps the cookie and sends it with every later request, so she is logged in from the
+first moment. Had "maria" been taken, step 6 would have failed on the unique index, nothing would
+have been saved, and the answer would have been a 409 under `body.name`.
+
+## Check yourself
+
+<details>
+<summary>1. Why does the database store only the token's hash, never the token?</summary>
+
+The token in the cookie is what logs someone in. If the table held tokens, anyone who got a copy of
+the database (a leaked backup, a stolen dump) could put one in their own browser and be that
+player. SHA-256 can't be run backwards, so a copy of the hashes logs no one in. The server can
+still check a cookie, by hashing it again and looking the hash up.
+
+</details>
+<details>
+<summary>2. Why do a wrong email and a wrong password give the same answer, in the same time?</summary>
+
+Different answers would let anyone find out which emails have accounts, just by trying them: a list
+of real accounts is the first thing an attacker wants. The same message stops that in the words,
+and `checkPassword` comparing against `DUMMY_HASH` when there is no account stops it in the timing,
+since every login then takes about 0.3 s.
+
+</details>
+<details>
+<summary>3. What does <code>SameSite=Lax</code> stop?</summary>
+
+Cross-site request forgery. An evil page could hold a hidden form that posts to
+`/api/v1/auth/logout`, or later to an answer route, and submit it the moment you visit. With
+`SameSite=Lax` the browser doesn't send the `sid` cookie with a form posted from another site, so
+the request arrives logged out and is refused. Following a plain link to the quiz still sends it,
+so you arrive logged in.
+
+</details>
+<details>
+<summary>4. Why does every login make a new session, instead of reusing one?</summary>
+
+Session fixation. If an attacker could get a session ID into your browser before you log in, and
+logging in upgraded that same session, they would share your logged-in session. A new random token
+at every login makes anything planted before it worthless. The login test proves it: after a
+sign-up and two logins there are 3 session rows, each with a different cookie.
+
+</details>
+<details>
+<summary>5. Sign-up sends <code>"role": "admin"</code>. Name the two places that stop it.</summary>
+
+`signUpSchema` doesn't list `role`, so `validate` leaves it out of `req.valid.body`, and
+`createPlayer` reads only `name`, `email` and `password` from that. Even if both were bypassed, the
+insert sets no role, so the database default makes the account a `user`. The test "makes every
+sign-up a player" checks it.
+
+</details>
+<details>
+<summary>6. Why does sign-up create the user and the score in one <code>db.batch()</code>?</summary>
+
+A batch on `neon-http` is one transaction: both inserts commit or neither does. Two separate
+inserts could leave a player with no score row if the second failed, and every game route would
+then have to cope with that. Tried on the `test` branch: a batch whose second insert failed left no
+user behind.
+
+</details>

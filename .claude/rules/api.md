@@ -7,6 +7,7 @@ All routes are versioned under `/api/v1`, one router per resource, mounted in `s
 | Mount | File and endpoints |
 | --- | --- |
 | `/api/v1/health` | `routes/health.routes.js`: `GET /` (API and database check) |
+| `/api/v1/auth` | `routes/auth.routes.js`: `POST /sign-up`, `POST /login`, `POST /logout`, `GET /me` |
 
 - Router files: `const xRouter = Router();` then `export default xRouter;`
 - REST verbs: `GET` list/detail, `POST` create, `PUT` update, `DELETE` remove. Actions that aren't
@@ -31,11 +32,18 @@ Middleware registered after a router never runs for that router's routes.
   becomes a 500 with a generic message, and the real error goes only to the server log
 - **Security:** `config/arcjet.js` makes one Arcjet client (shield, bot detection allowing search
   engines and link previews). Stricter rules for a route use `aj.withRule()` at module level, run by
-  `arcjetProtect(client, props)`. Rate limit = 429, bot or shield = 403; if Arcjet can't be reached
+  `arcjetProtect(client, props)`. Rate limit = 429, bot or shield = 403, an email the sign-up rule
+  refuses = 400 under `body.email`; if Arcjet can't be reached
   the request goes through. Tests skip Arcjet
 - **Local testing gotcha:** Arcjet caches a denial for about a minute, and locally every request
   comes from 127.0.0.1. One plain `curl` (classed as a bot) makes every request 403 for that minute,
   browser included. Send a browser user agent with `curl -A`
+- **Validation:** `validate({ body, query, params })` checks each part against a Zod schema in
+  `src/validation/` onto `req.valid`; routes read only `req.valid`. A failure is a 400 whose
+  `details` list every problem as `{ path: 'body.email', message }`. `fieldError(status, field,
+  message)` makes a one-field error the same shape
+- **Auth:** `requireAuth` (401) loads `req.user` from the `sid` cookie; `requireRole(...roles)`
+  (403) runs after it. Sessions are 30 days, renewed with under 15 left, and new at every login
 
 ## Status codes
 

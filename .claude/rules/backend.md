@@ -22,10 +22,14 @@ backend/
 │   │   ├── arcjet.js       the one Arcjet client
 │   │   └── cloudinary.js   the configured Cloudinary client, the photo folder and photo addresses
 │   ├── db/index.js         exports `db` (Drizzle client)
-│   ├── db/schema/          users.js (roleEnum, users, scores), quiz.js (countries, questions), index.js
+│   ├── db/schema/          users.js (roleEnum, users, scores), quiz.js (countries, questions),
+│   │                       auth.js (sessions), index.js
 │   ├── db/seed.js          creates the admin from SEED_ADMIN_* (npm run db:seed)
-│   ├── lib/                errors.js (AppError), passwords.js (hashPassword, bcryptjs cost 12)
-│   ├── middleware/         errorHandler (+ notFound), security (arcjetProtect, securityMiddleware)
+│   ├── lib/                errors.js (AppError, fieldError, isUniqueViolation), passwords.js,
+│   │                       tokens.js, sessions.js, accounts.js (publicUser, createPlayer)
+│   ├── middleware/         errorHandler (+ notFound), security (arcjetProtect, securityMiddleware),
+│   │                       validate, auth (requireAuth, requireRole)
+│   ├── validation/         Zod schemas, one file per resource
 │   └── routes/<name>.routes.js
 ├── scripts/                one-off scripts: importFromMysql.js and its transform.js
 ├── drizzle/                generated migrations + meta (commit these)
@@ -59,6 +63,10 @@ must be running).
 - Rules the data must always follow are CHECK and UNIQUE constraints in the schema, so they hold for
   the import and any future script too, not only for the routes
 - A new schema file must be exported from `schema/index.js`, or drizzle-kit won't see it
+- Writes to more than one table go in one `db.batch([...])`, which is one transaction on
+  `neon-http` (the driver has no interactive transactions). A row needing an id made earlier in
+  the same batch takes it from a parameterised subquery in `values()`; Drizzle's
+  `insert().select()` only accepts a select listing every column of the table, in order
 
 ## Migrations
 
