@@ -8,6 +8,7 @@ import authRouter from './routes/auth.routes.js';
 import roundsRouter from './routes/rounds.routes.js';
 import adminQuestionsRouter from './routes/adminQuestions.routes.js';
 import adminCountriesRouter from './routes/adminCountries.routes.js';
+import adminUsersRouter from './routes/adminUsers.routes.js';
 import { securityMiddleware } from './middleware/security.js';
 
 // The app without app.listen(), so tests can send it requests without a port
@@ -25,6 +26,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/rounds', roundsRouter);
 app.use('/api/v1/admin/questions', adminQuestionsRouter);
 app.use('/api/v1/admin/countries', adminCountriesRouter);
+app.use('/api/v1/admin/users', adminUsersRouter);
 
 // Both last: notFound catches every address no router answered, and errorHandler catches
 // everything thrown above it
