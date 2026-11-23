@@ -6,7 +6,15 @@ import { photoUpload } from '../middleware/upload.js';
 import { fieldError } from '../lib/errors.js';
 import { listQuerySchema, questionSchema } from '../validation/admin.js';
 import { idParamsSchema } from '../validation/common.js';
-import { listQuestions, getQuestion, previewQuestion, createQuestion, updateQuestion } from '../lib/questions.js';
+import {
+    listQuestions,
+    getQuestion,
+    previewQuestion,
+    createQuestion,
+    updateQuestion,
+    deleteQuestion,
+    setHidden,
+} from '../lib/questions.js';
 
 const adminQuestionsRouter = Router();
 
@@ -37,6 +45,22 @@ adminQuestionsRouter.get('/:id/preview', validate({ params: idParamsSchema }), a
 // Changes a question. Sent as a form with a photo to replace it, or as JSON to keep it
 adminQuestionsRouter.put('/:id', photoUpload, validate({ params: idParamsSchema, body: questionSchema }), async (req, res) => {
     res.json({ data: await updateQuestion(req.valid.params.id, req.valid.body, req.file) });
+});
+
+// Deletes a question no round has used. A played one answers 409
+adminQuestionsRouter.delete('/:id', validate({ params: idParamsSchema }), async (req, res) => {
+    await deleteQuestion(req.valid.params.id);
+    res.status(204).end();
+});
+
+// Keeps a question out of new rounds
+adminQuestionsRouter.post('/:id/hide', validate({ params: idParamsSchema }), async (req, res) => {
+    res.json({ data: await setHidden(req.valid.params.id, true) });
+});
+
+// Lets new rounds pick a hidden question again
+adminQuestionsRouter.post('/:id/unhide', validate({ params: idParamsSchema }), async (req, res) => {
+    res.json({ data: await setHidden(req.valid.params.id, false) });
 });
 
 export default adminQuestionsRouter;

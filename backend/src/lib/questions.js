@@ -2,7 +2,7 @@ import { asc, count, eq, ilike, or, sql } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 import { countries, questions, roundQuestions } from '../db/schema/index.js';
-import { AppError } from './errors.js';
+import { AppError, isRestrictViolation } from './errors.js';
 import { containsPattern, pagination } from './lists.js';
 import { shuffleAnswers } from './picking.js';
 import { deletePhoto, uploadQuestionPhoto } from './photos.js';
@@ -124,5 +124,34 @@ export async function updateQuestion(questionId, { country, ...fields }, file) {
         throw error;
     }
     if (photo) await deletePhoto(old.cloudinaryId);
+    return getQuestion(questionId);
+}
+
+// Deletes a question no round has used, and its photo. A played one is a 409: it can only be hidden
+export async function deleteQuestion(questionId) {
+    let deleted;
+    try {
+        [deleted] = await db
+            .delete(questions)
+            .where(eq(questions.questionId, questionId))
+            .returning({ cloudinaryId: questions.cloudinaryId });
+    } catch (error) {
+        // The database decides, so a round that picked it a moment ago still counts
+        if (isRestrictViolation(error)) throw new AppError(409, 'This question has been played, so it can only be hidden');
+        throw error;
+    }
+    if (!deleted) throw new AppError(404, NOT_FOUND);
+    await deletePhoto(deleted.cloudinaryId);
+}
+
+// Hides a question from new rounds, or brings it back. Rounds that already hold it keep it
+export async function setHidden(questionId, hidden) {
+    const [saved] = await db
+        .update(questions)
+        // coalesce keeps the first time it was hidden when it's hidden again
+        .set({ hiddenAt: hidden ? sql`coalesce(${questions.hiddenAt}, now())` : null })
+        .where(eq(questions.questionId, questionId))
+        .returning({ questionId: questions.questionId });
+    if (!saved) throw new AppError(404, NOT_FOUND);
     return getQuestion(questionId);
 }

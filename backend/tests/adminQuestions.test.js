@@ -4,7 +4,7 @@ import { eq, like } from 'drizzle-orm';
 
 import app from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { users, countries, questions } from '../src/db/schema/index.js';
+import { users, countries, questions, rounds, roundQuestions } from '../src/db/schema/index.js';
 import { cloudinary } from '../src/config/cloudinary.js';
 import { hashPassword } from '../src/lib/passwords.js';
 
@@ -32,6 +32,7 @@ const PHOTO = { filename: 'landmark.jpg', contentType: 'image/jpeg' };
 
 let admin;
 let player;
+let playerId;
 let seeded;
 
 let count = 0;
@@ -59,6 +60,31 @@ async function newAdmin() {
 function withForm(req, values = {}) {
     for (const [name, value] of Object.entries({ ...FORM, ...values })) req.field(name, String(value));
     return req;
+}
+
+// A question written straight into the table, as one an admin could have added
+async function addQuestion(values = {}) {
+    const [question] = await db.insert(questions).values({
+        countryId: seeded[0].countryId,
+        imageUrl: 'https://example.com/admin-q-test-extra.jpg',
+        cloudinaryId: `${CLOUDINARY_ID}-extra`,
+        question: 'Admin test extra question',
+        hint: 'Admin test extra hint',
+        answer1: 'One',
+        answer2: 'Two',
+        answer3: 'Three',
+        correctAnswer: 1,
+        ...values,
+    }).returning();
+    return question;
+}
+
+// Puts a question in one of the player's rounds, so the database counts it as played
+async function playQuestion(questionId) {
+    const [round] = await db.insert(rounds)
+        .values({ userId: playerId, status: 'abandoned', finishedAt: new Date() })
+        .returning();
+    await db.insert(roundQuestions).values({ roundId: round.roundId, position: 1, questionId, answerOrder: [1, 2, 3] });
 }
 
 // Cloudinary is never called: each upload "succeeds" with a new name, and deletes do nothing
@@ -89,7 +115,7 @@ beforeAll(async () => {
     }))).returning();
     admin = await newAdmin();
     player = request.agent(app);
-    await player.post('/api/v1/auth/sign-up').send(newAccount());
+    playerId = (await player.post('/api/v1/auth/sign-up').send(newAccount())).body.data.userId;
 });
 
 afterAll(async () => {
@@ -260,5 +286,51 @@ describe('editing a question', () => {
         const res = await withForm(admin.put(`${QUESTIONS}/2147483647`)).attach('photo', Buffer.from('jpeg bytes'), PHOTO);
         expect(res.status).toBe(404);
         expect(upload).not.toHaveBeenCalled();
+    });
+});
+
+describe('deleting a question', () => {
+    it('deletes a question no round has used, and its photo', async () => {
+        const question = await addQuestion();
+        const res = await admin.delete(`${QUESTIONS}/${question.questionId}`);
+        expect(res.status).toBe(204);
+        expect(await db.select().from(questions).where(eq(questions.questionId, question.questionId))).toHaveLength(0);
+        expect(destroy).toHaveBeenCalledWith(`${CLOUDINARY_ID}-extra`, { resource_type: 'image', invalidate: true });
+    });
+
+    it('refuses to delete a played question, keeps its photo, and lists it as played', async () => {
+        const question = await addQuestion();
+        await playQuestion(question.questionId);
+        const res = await admin.delete(`${QUESTIONS}/${question.questionId}`);
+        expect(res.status).toBe(409);
+        expect(res.body.error.message).toBe('This question has been played, so it can only be hidden');
+        expect(destroy).not.toHaveBeenCalled();
+        expect((await admin.get(`${QUESTIONS}/${question.questionId}`)).body.data.played).toBe(true);
+    });
+
+    it("answers 404 for a question that doesn't exist", async () => {
+        expect((await admin.delete(`${QUESTIONS}/2147483647`)).status).toBe(404);
+    });
+});
+
+describe('hiding a question', () => {
+    it('hides a question, keeps the first time on a second hide, and brings it back', async () => {
+        const question = await addQuestion();
+        const url = `${QUESTIONS}/${question.questionId}`;
+
+        const hidden = await admin.post(`${url}/hide`);
+        expect(hidden.status).toBe(200);
+        expect(hidden.body.data.hiddenAt).toEqual(expect.any(String));
+        expect((await admin.post(`${url}/hide`)).body.data.hiddenAt).toBe(hidden.body.data.hiddenAt);
+        expect((await admin.get(`${url}/preview`)).body.data.hidden).toBe(true);
+
+        const shown = await admin.post(`${url}/unhide`);
+        expect(shown.status).toBe(200);
+        expect(shown.body.data.hiddenAt).toBeNull();
+    });
+
+    it("answers 404 for a question that doesn't exist", async () => {
+        expect((await admin.post(`${QUESTIONS}/2147483647/hide`)).status).toBe(404);
+        expect((await admin.post(`${QUESTIONS}/2147483647/unhide`)).status).toBe(404);
     });
 });
