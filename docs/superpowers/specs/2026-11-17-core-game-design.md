@@ -164,41 +164,43 @@ This replaces the rebuild spec's phase table.
 | 0–1 | Setup, schema, import | done |
 | 2a | Auth: sign-up, login, sessions, role checks, password rules | 3–4 |
 | 2b | Core game (this spec) | 4–6 |
-| 2c | Admin CRUD for questions and users, plus admin preview mode | 2–3 |
+| 2c | Admin: questions with photo upload, hiding and preview; listing and deleting players | 3–5 |
 | 3 | Visual direction: HTML previews, Slav chooses | 1–2 |
 | 4 | React frontend for 2a–2c | 8–12 |
 | 5 | Deploy to Railway: first live URL | 2–3 |
 | 6 | Cutover: remove PHP `src/`, with approval | 1 |
 | 7 | Leaderboard | 1–2 |
-| 8 | Admin image upload | 2–3 |
-| 9 | Content: question categories, free sources and licences, a credit per image, new questions | 3–5, then ongoing |
-| 10 | Fact cards after each answer | 2–3 |
-| 11 | World map: levels unlock countries, play by region | 4–6 |
-| 12 | Collections: passport, badges, flags, map puzzle | 4–6 |
-| 13 | Timed rounds, then lives and survival modes | 2–4 |
+| 8 | Content: question categories, free sources and licences, a credit per image, new questions | 3–5, then ongoing |
+| 9 | Fact cards after each answer | 2–3 |
+| 10 | World map: levels unlock countries, play by region | 4–6 |
+| 11 | Collections: passport, badges, flags, map puzzle | 4–6 |
+| 12 | Timed rounds, then lives and survival modes | 2–4 |
 
 About 40–60 sessions in all, roughly 4 to 5 months at three sessions a week. The first live URL
-comes after phase 5, about 17 to 27 sessions from 2026-11-17. Phases 4, 11 and 12 are the
+comes after phase 5, about 17 to 27 sessions from 2026-11-17. Phases 4, 10 and 11 are the
 likeliest to overrun. Content comes before the map and collections because 16 countries and 46
 questions are too few to make either worthwhile.
+
+Admin image upload, phase 8 until 2026-11-23, moved into 2c, and the phases after it moved up one
+(`2026-11-23-phase-2c-admin.md`).
 
 ## Ideas kept for later phases
 
 Slav's ideas from 2026-11-17, each to be designed in its own phase:
 
 - **Levels unlock countries** on the world map, starting from one; once every country is open,
-  question types unlock features (phase 11)
+  question types unlock features (phase 10)
 - **Wider content:** culture, food and objects, not only landmarks, so the game doesn't repeat
-  the same famous buildings (phase 9)
-- **Collections:** badges for rounds and difficulty, pins, country flags (phase 12)
+  the same famous buildings (phase 8)
+- **Collections:** badges for rounds and difficulty, pins, country flags (phase 11)
 - **Fact cards** about the photo or the country, so players learn as well as play; possibly
-  collectable (phase 10)
+  collectable (phase 9)
 - **Map puzzle:** each correct answer adds a piece of a country or continent map; a finished map
-  gives a bonus or a fact (phase 12)
+  gives a bonus or a fact (phase 11)
 - Suggested and liked: a **passport** screen that brings countries, stamps, flags, badges and
   puzzle pieces together; a fact card after every answer, right or wrong; missed questions
   coming back later
-- **Free sources to check in phase 9**, from memory and not yet verified: REST Countries and
+- **Free sources to check in phase 8**, from memory and not yet verified: REST Countries and
   flagcdn.com (flags and country data), Natural Earth through `world-atlas` (map shapes),
   Wikidata (CC0 facts), Wikipedia (credit and share-alike), Wikimedia Commons, Unsplash and
   Pexels (photos, licence per image)

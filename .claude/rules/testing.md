@@ -9,8 +9,9 @@
   `DB_URL` at it and refuses to run without it, so tests never touch the development database
 - Arcjet is off in tests (`NODE_ENV=test`)
 - Test first: write the test, watch it fail, then write the code
-- Each phase adds tests for its endpoints. Outside services (Cloudinary) are never called; tests
-  replace them with `vi.mock`
+- Each phase adds tests for its endpoints. Outside services are never called. Cloudinary is
+  replaced with `vi.spyOn(cloudinary.uploader, 'upload')` and `'destroy'`, restored in
+  `afterEach`, so `photos.js` and the routes still run
 - Tests that write to the `test` branch use their own recognisable values (`schema-test@example.com`)
   and delete them in `afterEach`, so the branch stays empty between runs
 - Route tests that need a logged-in user sign up through the API with `request.agent(app)`, which

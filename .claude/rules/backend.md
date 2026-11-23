@@ -8,7 +8,7 @@
 - PostgreSQL on **Neon**, accessed through **Drizzle ORM** (`drizzle-orm/neon-http`,
   `@neondatabase/serverless`). No raw SQL strings in route code; query through `db`
 - `dotenv` for config, Zod for validation, Arcjet and `helmet` for security, bcryptjs for passwords,
-  Cloudinary and multer for images. Each is installed in the phase that first uses it
+  Cloudinary and multer for images
 
 ## Layout
 
@@ -26,12 +26,14 @@ backend/
 │   │                       auth.js (sessions), game.js (roundStatusEnum, rounds, roundQuestions),
 │   │                       index.js
 │   ├── db/seed.js          creates the admin from SEED_ADMIN_* (npm run db:seed)
-│   ├── lib/                errors.js (AppError, fieldError, isUniqueViolation), passwords.js,
-│   │                       tokens.js, sessions.js, accounts.js (publicUser, createPlayer),
-│   │                       scoring.js and picking.js (pure game rules), rounds.js (the game)
+│   ├── lib/                errors.js (AppError, fieldError, isUniqueViolation,
+│   │                       isRestrictViolation), passwords.js, tokens.js, sessions.js,
+│   │                       accounts.js (publicUser, createPlayer), scoring.js and picking.js
+│   │                       (pure game rules), rounds.js (the game), lists.js (search and pages),
+│   │                       photos.js (Cloudinary), questions.js and users.js (admin)
 │   ├── middleware/         errorHandler (+ notFound), security (arcjetProtect, securityMiddleware),
-│   │                       validate, auth (requireAuth, requireRole)
-│   ├── validation/         Zod schemas, one file per resource
+│   │                       validate, auth (requireAuth, requireRole), upload (photoUpload, multer)
+│   ├── validation/         Zod schemas, one file per resource; common.js (idParamsSchema)
 │   └── routes/<name>.routes.js
 ├── scripts/                one-off scripts: importFromMysql.js and its transform.js
 ├── drizzle/                generated migrations + meta (commit these)
@@ -93,3 +95,7 @@ Pass the folder as `folder`, apart from `public_id`: the account uses dynamic fo
 folder written only into the `public_id` leaves the photo at the root of the Media Library. The
 `public_id` Cloudinary returns still starts with the folder. Photo addresses are built with
 `urlAnalytics: false`, so they carry no `?_a=` SDK tag.
+
+`lib/photos.js` is the only app file that calls Cloudinary. Upload first, then write the row;
+delete the new photo if the row fails, and an old one only once the row points at its replacement.
+A failed delete is logged, not thrown: the database has already changed.
