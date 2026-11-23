@@ -8,9 +8,9 @@ import { nextStreak, streakOf, tokensFor } from './scoring.js';
 
 const NO_ROUND = 'You have no round in play. Press Play to start one';
 
-// Starts a round: picks its questions and shuffles each one's answers. 409 if one is in play
+// Starts a round from the questions not hidden: picks them and shuffles each one's answers. 409 if one is in play
 export async function startRound(userId) {
-    const all = await db.select({ questionId: questions.questionId }).from(questions);
+    const all = await db.select({ questionId: questions.questionId }).from(questions).where(isNull(questions.hiddenAt));
     if (all.length === 0) throw new AppError(409, 'There are no questions to play yet');
 
     const correct = await db

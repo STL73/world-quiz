@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { and, asc, eq, isNull, like } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, like } from 'drizzle-orm';
 
 import app from '../src/app.js';
 import { db } from '../src/db/index.js';
@@ -364,5 +364,28 @@ describe('a round\'s results', () => {
     it('refuses an id that isn\'t a number', async () => {
         const player = await newPlayer();
         expect((await player.agent.get(`${ROUNDS}/abc`)).status).toBe(400);
+    });
+});
+
+describe('hidden questions', () => {
+    it('leaves hidden questions out of a new round', async () => {
+        const hidden = (await db
+            .select({ questionId: questions.questionId })
+            .from(questions)
+            .where(eq(questions.cloudinaryId, CLOUDINARY_ID))
+            .orderBy(asc(questions.questionId))
+            .limit(3)).map((row) => row.questionId);
+        await db.update(questions).set({ hiddenAt: new Date() }).where(inArray(questions.questionId, hidden));
+        try {
+            const player = await newPlayer();
+            const res = await player.agent.post(ROUNDS);
+            // 12 questions, 3 hidden: 9 left, fewer than a full round
+            expect(res.body.data.total).toBe(9);
+            const rows = await db.select().from(roundQuestions).where(eq(roundQuestions.roundId, res.body.data.roundId));
+            for (const row of rows) expect(hidden).not.toContain(row.questionId);
+        } finally {
+            // Later tests in this file expect all 12
+            await db.update(questions).set({ hiddenAt: null }).where(inArray(questions.questionId, hidden));
+        }
     });
 });
