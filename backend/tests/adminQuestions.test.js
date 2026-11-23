@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
-import { like } from 'drizzle-orm';
+import { eq, like } from 'drizzle-orm';
 
 import app from '../src/app.js';
 import { db } from '../src/db/index.js';
 import { users, countries, questions } from '../src/db/schema/index.js';
+import { cloudinary } from '../src/config/cloudinary.js';
 import { hashPassword } from '../src/lib/passwords.js';
 
 // Everything made here is recognisable, so afterAll can remove it all. Photos the routes "upload"
@@ -16,6 +17,18 @@ const PASSWORD = 'correct-horse-battery';
 
 const QUESTIONS = '/api/v1/admin/questions';
 const COUNTRIES = '/api/v1/admin/countries';
+
+// What the add form sends, as text, the way a browser sends a form
+const FORM = {
+    country: COUNTRY,
+    question: 'Admin test: which tower is this?',
+    hint: 'Admin test hint',
+    answer1: 'Admin tower one',
+    answer2: 'Admin tower two',
+    answer3: 'Admin tower three',
+    correctAnswer: '2',
+};
+const PHOTO = { filename: 'landmark.jpg', contentType: 'image/jpeg' };
 
 let admin;
 let player;
@@ -41,6 +54,25 @@ async function newAdmin() {
     await agent.post('/api/v1/auth/login').send({ email: account.email, password: PASSWORD });
     return agent;
 }
+
+// Fills a multipart request with the form's fields, `values` replacing some of them
+function withForm(req, values = {}) {
+    for (const [name, value] of Object.entries({ ...FORM, ...values })) req.field(name, String(value));
+    return req;
+}
+
+// Cloudinary is never called: each upload "succeeds" with a new name, and deletes do nothing
+let upload;
+let destroy;
+let uploads = 0;
+beforeEach(() => {
+    upload = vi.spyOn(cloudinary.uploader, 'upload').mockImplementation(async () => {
+        uploads += 1;
+        return { public_id: `world-quiz/test/questions/${CLOUDINARY_ID}-${uploads}`, version: 1700000000 };
+    });
+    destroy = vi.spyOn(cloudinary.uploader, 'destroy').mockResolvedValue({ result: 'ok' });
+});
+afterEach(() => vi.restoreAllMocks());
 
 beforeAll(async () => {
     const [country] = await db.insert(countries).values({ name: COUNTRY }).returning();
@@ -143,5 +175,90 @@ describe('countries', () => {
         const res = await admin.get(COUNTRIES);
         expect(res.status).toBe(200);
         expect(res.body.data).toContainEqual({ countryId: seeded[0].countryId, name: COUNTRY });
+    });
+});
+
+describe('adding a question', () => {
+    it('saves the question with its photo, finding the country whatever the capitals', async () => {
+        const res = await withForm(admin.post(QUESTIONS), { country: 'admin TESTLAND' })
+            .attach('photo', Buffer.from('jpeg bytes'), PHOTO);
+        expect(res.status).toBe(201);
+        expect(res.body.data).toMatchObject({
+            country: COUNTRY,
+            question: FORM.question,
+            correctAnswer: 2,
+            hiddenAt: null,
+            played: false,
+            imageUrl: expect.stringMatching(new RegExp(`/v1700000000/world-quiz/test/questions/${CLOUDINARY_ID}-\\d+$`)),
+        });
+        expect(upload).toHaveBeenCalledTimes(1);
+        const [row] = await db.select().from(questions).where(eq(questions.questionId, res.body.data.questionId));
+        expect(row.cloudinaryId).toMatch(new RegExp(`^world-quiz/test/questions/${CLOUDINARY_ID}-`));
+    });
+
+    it('makes a new country when none matches', async () => {
+        const res = await withForm(admin.post(QUESTIONS), { country: 'Admin Testonia' })
+            .attach('photo', Buffer.from('jpeg bytes'), PHOTO);
+        expect(res.body.data.country).toBe('Admin Testonia');
+        expect((await admin.get(COUNTRIES)).body.data.map((c) => c.name)).toContain('Admin Testonia');
+    });
+
+    it('needs a photo', async () => {
+        const res = await withForm(admin.post(QUESTIONS));
+        expect(res.status).toBe(400);
+        expect(res.body.error.details).toEqual([{ path: 'body.photo', message: 'Choose a photo of the landmark.' }]);
+    });
+
+    it("refuses a file that isn't a JPEG, PNG or WebP, and a photo over 5 MB, before uploading", async () => {
+        const gif = await withForm(admin.post(QUESTIONS))
+            .attach('photo', Buffer.from('gif bytes'), { filename: 'a.gif', contentType: 'image/gif' });
+        expect(gif.status).toBe(400);
+        expect(gif.body.error.details).toEqual([{ path: 'body.photo', message: 'Choose a JPEG, PNG or WebP photo.' }]);
+
+        const big = await withForm(admin.post(QUESTIONS)).attach('photo', Buffer.alloc(5 * 1024 * 1024 + 1), PHOTO);
+        expect(big.status).toBe(400);
+        expect(big.body.error.details).toEqual([{ path: 'body.photo', message: 'Choose a photo of 5 MB or less.' }]);
+        expect(upload).not.toHaveBeenCalled();
+    });
+
+    it('lists every problem with the fields, and uploads nothing', async () => {
+        const res = await withForm(admin.post(QUESTIONS), { hint: ' ', correctAnswer: '4' })
+            .attach('photo', Buffer.from('jpeg bytes'), PHOTO);
+        expect(res.status).toBe(400);
+        expect(res.body.error.details.map((d) => d.path).sort()).toEqual(['body.correctAnswer', 'body.hint']);
+        expect(upload).not.toHaveBeenCalled();
+    });
+
+    it('shows Cloudinary refusing the file under the photo field', async () => {
+        upload.mockRejectedValueOnce({ http_code: 400, message: 'Invalid image file' });
+        const res = await withForm(admin.post(QUESTIONS)).attach('photo', Buffer.from('not an image'), PHOTO);
+        expect(res.status).toBe(400);
+        expect(res.body.error.details[0].path).toBe('body.photo');
+    });
+});
+
+describe('editing a question', () => {
+    it('changes the text and keeps the photo when no new one is sent', async () => {
+        const id = seeded[0].questionId;
+        const res = await admin.put(`${QUESTIONS}/${id}`)
+            .send({ ...FORM, hint: 'An edited hint', correctAnswer: 3 });
+        expect(res.status).toBe(200);
+        expect(res.body.data).toMatchObject({ hint: 'An edited hint', correctAnswer: 3, imageUrl: seeded[0].imageUrl });
+        expect(upload).not.toHaveBeenCalled();
+        expect(destroy).not.toHaveBeenCalled();
+    });
+
+    it('replaces the photo and deletes the old one from Cloudinary', async () => {
+        const id = seeded[1].questionId;
+        const res = await withForm(admin.put(`${QUESTIONS}/${id}`)).attach('photo', Buffer.from('jpeg bytes'), PHOTO);
+        expect(res.status).toBe(200);
+        expect(res.body.data.imageUrl).not.toBe(seeded[1].imageUrl);
+        expect(destroy).toHaveBeenCalledWith(CLOUDINARY_ID, { resource_type: 'image', invalidate: true });
+    });
+
+    it("answers 404 for a question that doesn't exist, uploading nothing", async () => {
+        const res = await withForm(admin.put(`${QUESTIONS}/2147483647`)).attach('photo', Buffer.from('jpeg bytes'), PHOTO);
+        expect(res.status).toBe(404);
+        expect(upload).not.toHaveBeenCalled();
     });
 });

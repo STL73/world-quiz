@@ -5,6 +5,7 @@ import { countries, questions, roundQuestions } from '../db/schema/index.js';
 import { AppError } from './errors.js';
 import { containsPattern, pagination } from './lists.js';
 import { shuffleAnswers } from './picking.js';
+import { deletePhoto, uploadQuestionPhoto } from './photos.js';
 
 const NOT_FOUND = 'Question not found';
 
@@ -66,4 +67,62 @@ export async function previewQuestion(questionId) {
 // Every country, by name
 export function listCountries() {
     return db.select({ countryId: countries.countryId, name: countries.name }).from(countries).orderBy(asc(countries.name));
+}
+
+// The id of the country with this name, whatever its capitals, made first if there is none
+async function countryIdFor(name) {
+    const find = () => db
+        .select({ countryId: countries.countryId })
+        .from(countries)
+        .where(sql`lower(${countries.name}) = lower(${name})`);
+    const [found] = await find();
+    if (found) return found.countryId;
+    // If another request made the same country a moment ago, this does nothing and the second look finds it
+    await db.insert(countries).values({ name }).onConflictDoNothing();
+    const [made] = await find();
+    return made.countryId;
+}
+
+// Adds a question with its photo. The photo goes up first, because the row needs its address
+export async function createQuestion({ country, ...fields }, file) {
+    const countryId = await countryIdFor(country);
+    const photo = await uploadQuestionPhoto(file);
+    let questionId;
+    try {
+        [{ questionId }] = await db
+            .insert(questions)
+            .values({ ...fields, countryId, ...photo })
+            .returning({ questionId: questions.questionId });
+    } catch (error) {
+        // No row points at the new photo, so it would only take up space
+        await deletePhoto(photo.cloudinaryId);
+        throw error;
+    }
+    return getQuestion(questionId);
+}
+
+// Changes a question, and its photo if a new one is sent. The old photo goes only once the row points at the new one
+export async function updateQuestion(questionId, { country, ...fields }, file) {
+    const [old] = await db
+        .select({ cloudinaryId: questions.cloudinaryId })
+        .from(questions)
+        .where(eq(questions.questionId, questionId));
+    if (!old) throw new AppError(404, NOT_FOUND);
+
+    const countryId = await countryIdFor(country);
+    const photo = file ? await uploadQuestionPhoto(file) : null;
+    try {
+        const [saved] = await db
+            .update(questions)
+            .set({ ...fields, countryId, ...photo })
+            .where(eq(questions.questionId, questionId))
+            .returning({ questionId: questions.questionId });
+        // Deleted by another admin since the first look
+        if (!saved) throw new AppError(404, NOT_FOUND);
+    } catch (error) {
+        if (photo) await deletePhoto(photo.cloudinaryId);
+        throw error;
+    }
+    if (photo) await deletePhoto(old.cloudinaryId);
+    return getQuestion(questionId);
 }
