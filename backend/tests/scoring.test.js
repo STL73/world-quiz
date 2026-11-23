@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { nextStreak, streakOf, tokensFor } from '../src/lib/scoring.js';
+import { levelFor, nextStreak, streakOf, tokensFor } from '../src/lib/scoring.js';
 
 // Plays a list of answers the way the answer route does, and adds up the tokens
 function playRound(answers) {
@@ -45,5 +45,14 @@ describe('scoring', () => {
 
     it('scores the best round at 140', () => {
         expect(playRound(Array(10).fill(right))).toBe(140);
+    });
+});
+
+describe('levelFor', () => {
+    it('starts at level 1 and goes up one level every 100 tokens', () => {
+        expect(levelFor(0)).toBe(1);
+        expect(levelFor(99)).toBe(1);
+        expect(levelFor(100)).toBe(2);
+        expect(levelFor(650)).toBe(7);
     });
 });

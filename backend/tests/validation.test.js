@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 
 import { signUpSchema, loginSchema } from '../src/validation/auth.js';
 import { answerSchema, roundParamsSchema } from '../src/validation/rounds.js';
+import { listQuerySchema, questionSchema } from '../src/validation/admin.js';
+import { idParamsSchema } from '../src/validation/common.js';
 
 const valid = { name: 'Maria', email: 'maria@example.com', password: 'correct horse' };
 const signUpOk = (changes) => signUpSchema.safeParse({ ...valid, ...changes }).success;
@@ -68,5 +70,56 @@ describe('roundParamsSchema', () => {
         expect(roundParamsSchema.safeParse({ id: '1.5' }).success).toBe(false);
         // Above Postgres's integer limit, which would otherwise be a database error and a 500
         expect(roundParamsSchema.safeParse({ id: '2147483648' }).success).toBe(false);
+    });
+});
+
+describe('idParamsSchema', () => {
+    it('is the same rule as a round id', () => {
+        expect(roundParamsSchema).toBe(idParamsSchema);
+    });
+});
+
+describe('listQuerySchema', () => {
+    it('defaults to the first page of 20 and turns text into numbers', () => {
+        expect(listQuerySchema.parse({})).toEqual({ page: 1, limit: 20 });
+        expect(listQuerySchema.parse({ page: '3', limit: '50', search: '  paris ' }))
+            .toEqual({ page: 3, limit: 50, search: 'paris' });
+    });
+
+    it('refuses a page below 1 and a limit above 100', () => {
+        expect(listQuerySchema.safeParse({ page: '0' }).success).toBe(false);
+        expect(listQuerySchema.safeParse({ limit: '101' }).success).toBe(false);
+        expect(listQuerySchema.safeParse({ page: 'two' }).success).toBe(false);
+    });
+});
+
+describe('questionSchema', () => {
+    const form = {
+        country: ' France ',
+        question: 'Which tower is this?',
+        hint: 'Built for a world fair',
+        answer1: 'Eiffel Tower',
+        answer2: 'Tokyo Tower',
+        answer3: 'Blackpool Tower',
+        correctAnswer: '1',
+    };
+
+    it('trims the text and turns the right answer into a number, as a form sends it', () => {
+        expect(questionSchema.parse(form)).toEqual({ ...form, country: 'France', correctAnswer: 1 });
+    });
+
+    it('lists every problem under its field', () => {
+        const result = questionSchema.safeParse({ ...form, hint: '  ', correctAnswer: '4' });
+        expect(result.error.issues.map((issue) => issue.path.join('.')).sort()).toEqual(['correctAnswer', 'hint']);
+    });
+
+    it('refuses two answers that differ only in capitals', () => {
+        const result = questionSchema.safeParse({ ...form, answer3: 'eiffel tower' });
+        expect(result.error.issues).toEqual([expect.objectContaining({ path: ['answers'], message: 'Each answer must be different.' })]);
+    });
+
+    it('refuses text longer than its column', () => {
+        expect(questionSchema.safeParse({ ...form, question: 'x'.repeat(151) }).success).toBe(false);
+        expect(questionSchema.safeParse({ ...form, answer1: 'x'.repeat(101) }).success).toBe(false);
     });
 });

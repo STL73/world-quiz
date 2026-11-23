@@ -16,3 +16,6 @@ export function fieldError(status, field, message) {
 
 // A broken UNIQUE rule. Drizzle keeps Postgres's own error on `cause`
 export const isUniqueViolation = (error) => (error.code ?? error.cause?.code) === '23505';
+
+// A delete refused by ON DELETE RESTRICT: another table still uses the row
+export const isRestrictViolation = (error) => (error.code ?? error.cause?.code) === '23001';

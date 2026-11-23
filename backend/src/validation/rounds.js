@@ -7,7 +7,5 @@ export const answerSchema = z.object({
     choice: z.int({ error: CHOICE_MESSAGE }).min(1, CHOICE_MESSAGE).max(3, CHOICE_MESSAGE),
 });
 
-// A round id from the address, which always arrives as text. Postgres integers end at 2147483647
-export const roundParamsSchema = z.object({
-    id: z.coerce.number().int().positive().max(2147483647),
-});
+// A round id from the address
+export { idParamsSchema as roundParamsSchema } from './common.js';

@@ -4,6 +4,7 @@ const HINT_TOKENS = 5;
 // Extra tokens for each correct answer from the STREAK_FROM-th in a row
 const STREAK_BONUS = 5;
 const STREAK_FROM = 3;
+const TOKENS_PER_LEVEL = 100;
 
 // The streak after an answer: correct answers in a row in this round, repeats included
 export const nextStreak = (streakBefore, correct) => (correct ? streakBefore + 1 : 0);
@@ -18,3 +19,6 @@ export function tokensFor({ correct, firstTime, hintUsed, streak }) {
     const base = hintUsed ? HINT_TOKENS : FIRST_TIME_TOKENS;
     return base + (streak >= STREAK_FROM ? STREAK_BONUS : 0);
 }
+
+// The level a number of tokens reaches: 0 to 99 is level 1, 100 to 199 level 2
+export const levelFor = (starTokens) => Math.floor(starTokens / TOKENS_PER_LEVEL) + 1;
