@@ -17,7 +17,12 @@
   keeps the cookie like a browser. Accounts use a recognisable email prefix (`auth-test-`) and
   are deleted in `afterAll`
 - A database rule is tested by breaking it and checking Postgres's error code on `error.cause.code`
-  (`23505` UNIQUE, `23514` CHECK, `23503` foreign key)
+  (`23505` UNIQUE, `23514` CHECK, `23503` foreign key, `23001` a delete refused by
+  `ON DELETE RESTRICT`)
+- Test files run one at a time (`fileParallelism: false`): a round picks from every question on
+  the `test` branch, so a file adding questions mustn't run beside one playing rounds
+- Code that must hold under two requests at once is tested by sending both with `Promise.all`
+  and checking the statuses and the database afterwards (`rounds.test.js`)
 - Logic with no database or network (`scripts/transform.js`) is kept in its own file so it can be
   tested with made-up rows in milliseconds
 

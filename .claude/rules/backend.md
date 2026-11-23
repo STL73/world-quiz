@@ -23,10 +23,12 @@ backend/
 │   │   └── cloudinary.js   the configured Cloudinary client, the photo folder and photo addresses
 │   ├── db/index.js         exports `db` (Drizzle client)
 │   ├── db/schema/          users.js (roleEnum, users, scores), quiz.js (countries, questions),
-│   │                       auth.js (sessions), index.js
+│   │                       auth.js (sessions), game.js (roundStatusEnum, rounds, roundQuestions),
+│   │                       index.js
 │   ├── db/seed.js          creates the admin from SEED_ADMIN_* (npm run db:seed)
 │   ├── lib/                errors.js (AppError, fieldError, isUniqueViolation), passwords.js,
-│   │                       tokens.js, sessions.js, accounts.js (publicUser, createPlayer)
+│   │                       tokens.js, sessions.js, accounts.js (publicUser, createPlayer),
+│   │                       scoring.js and picking.js (pure game rules), rounds.js (the game)
 │   ├── middleware/         errorHandler (+ notFound), security (arcjetProtect, securityMiddleware),
 │   │                       validate, auth (requireAuth, requireRole)
 │   ├── validation/         Zod schemas, one file per resource
@@ -67,6 +69,10 @@ must be running).
   `neon-http` (the driver has no interactive transactions). A row needing an id made earlier in
   the same batch takes it from a parameterised subquery in `values()`; Drizzle's
   `insert().select()` only accepts a select listing every column of the table, in order
+- A write that must happen only once, however many requests arrive, puts its condition in the
+  `UPDATE`'s `WHERE` (`answered_at IS NULL`). When a second table depends on whether that update
+  saved a row, both go in one statement: `db.$with('x').as(db.update(...).returning(...))`, then
+  `db.with(x).update(other).from(x)`. A separate statement in the same batch can't tell
 
 ## Migrations
 

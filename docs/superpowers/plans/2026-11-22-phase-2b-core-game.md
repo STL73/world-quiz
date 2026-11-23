@@ -269,9 +269,10 @@ describe('game tables', () => {
         const question = await addTestQuestion();
         const { round } = await addTestRound();
         await addRoundQuestion(round.roundId, question.questionId);
-        // 23503 is Postgres's code for a broken foreign key
+        // 23001 is Postgres's code for a delete an ON DELETE RESTRICT rule refused. A foreign key
+        // without one (NO ACTION) gives 23503 instead
         const remove = db.delete(questions).where(eq(questions.questionId, question.questionId));
-        await expect(remove).rejects.toMatchObject({ cause: { code: '23503' } });
+        await expect(remove).rejects.toMatchObject({ cause: { code: '23001' } });
     });
 });
 ```

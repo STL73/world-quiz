@@ -8,6 +8,7 @@ All routes are versioned under `/api/v1`, one router per resource, mounted in `s
 | --- | --- |
 | `/api/v1/health` | `routes/health.routes.js`: `GET /` (API and database check) |
 | `/api/v1/auth` | `routes/auth.routes.js`: `POST /sign-up`, `POST /login`, `POST /logout`, `GET /me` |
+| `/api/v1/rounds` | `routes/rounds.routes.js`, players only: `POST /`, `GET /current`, `POST /current/hint`, `POST /current/answer`, `POST /current/abandon`, `GET /:id` |
 
 - Router files: `const xRouter = Router();` then `export default xRouter;`
 - REST verbs: `GET` list/detail, `POST` create, `PUT` update, `DELETE` remove. Actions that aren't
@@ -42,6 +43,9 @@ Middleware registered after a router never runs for that router's routes.
   `src/validation/` onto `req.valid`; routes read only `req.valid`. A failure is a 400 whose
   `details` list every problem as `{ path: 'body.email', message }`. `fieldError(status, field,
   message)` makes a one-field error the same shape
+- **Play routes** act on the player's one active round, so the browser never names a question. An
+  answer is a button (`{ choice: 1-3 }`); the server maps it through the round's `answer_order`.
+  A question must be opened with `GET /current` before it can be answered or hinted (409 if not)
 - **Auth:** `requireAuth` (401) loads `req.user` from the `sid` cookie; `requireRole(...roles)`
   (403) runs after it. Sessions are 30 days, renewed with under 15 left, and new at every login
 
