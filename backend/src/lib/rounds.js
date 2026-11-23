@@ -1,10 +1,10 @@
-import { and, asc, eq, ne, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, ne, notExists, sql } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
-import { countries, questions, rounds, roundQuestions } from '../db/schema/index.js';
+import { countries, questions, rounds, roundQuestions, scores } from '../db/schema/index.js';
 import { AppError, isUniqueViolation } from './errors.js';
 import { pickQuestions, shuffleAnswers } from './picking.js';
-import { streakOf } from './scoring.js';
+import { nextStreak, streakOf, tokensFor } from './scoring.js';
 
 const NO_ROUND = 'You have no round in play. Press Play to start one';
 
@@ -152,4 +152,71 @@ export async function roundSummary(userId, roundId) {
             tokensEarned: rq.tokensAwarded,
         })),
     };
+}
+
+// Whether the player has answered this question right in any round before
+async function answeredRightBefore(userId, questionId) {
+    const [row] = await db
+        .select({ id: roundQuestions.roundQuestionId })
+        .from(roundQuestions)
+        .innerJoin(rounds, eq(rounds.roundId, roundQuestions.roundId))
+        .where(and(eq(rounds.userId, userId), eq(roundQuestions.questionId, questionId), eq(roundQuestions.correct, true)))
+        .limit(1);
+    return Boolean(row);
+}
+
+// Checks the answer to the question on screen and adds its tokens. The last answer finishes the
+// round and comes back with the results. `choice` is the button, 1 to 3
+export async function answerQuestion(userId, choice) {
+    const { round, rows } = await activeRound(userId);
+    const { rq, question } = openRow(rows);
+
+    const chosenAnswer = rq.answerOrder[choice - 1];
+    const correct = chosenAnswer === question.correctAnswer;
+    const streak = nextStreak(progress(rows).streak, correct);
+    const firstTime = correct && !(await answeredRightBefore(userId, question.questionId));
+    const tokens = tokensFor({ correct, firstTime, hintUsed: rq.hintUsed, streak });
+
+    // Saves the answer only while the row is unanswered, and with the hint as it was read. A
+    // second request waits for the first, then finds nothing to update, so it adds 0 tokens
+    const answered = db.$with('answered').as(
+        db.update(roundQuestions)
+            .set({ answeredAt: new Date(), chosenAnswer, correct, tokensAwarded: tokens })
+            .where(and(
+                eq(roundQuestions.roundQuestionId, rq.roundQuestionId),
+                isNull(roundQuestions.answeredAt),
+                eq(roundQuestions.hintUsed, rq.hintUsed),
+            ))
+            .returning({ tokensAwarded: roundQuestions.tokensAwarded }),
+    );
+    const addTokens = db.with(answered)
+        .update(scores)
+        .set({ starTokens: sql`${scores.starTokens} + ${answered.tokensAwarded}` })
+        .from(answered)
+        .where(eq(scores.userId, userId))
+        .returning({ starTokens: scores.starTokens });
+    // Does nothing until every question in the round has been answered
+    const finishIfDone = db.update(rounds)
+        .set({ status: 'finished', finishedAt: new Date() })
+        .where(and(
+            eq(rounds.roundId, round.roundId),
+            eq(rounds.status, 'active'),
+            notExists(db.select().from(roundQuestions).where(and(
+                eq(roundQuestions.roundId, round.roundId),
+                isNull(roundQuestions.answeredAt),
+            ))),
+        ));
+
+    const [[added]] = await db.batch([addTokens, finishIfDone]);
+    if (!added) throw new AppError(409, 'That question has already been answered');
+
+    const result = {
+        correct,
+        correctChoice: rq.answerOrder.indexOf(question.correctAnswer) + 1,
+        tokensEarned: tokens,
+        streak,
+        starTokens: added.starTokens,
+    };
+    const isLast = rq.position === rows.length;
+    return isLast ? { ...result, summary: await roundSummary(userId, round.roundId) } : result;
 }

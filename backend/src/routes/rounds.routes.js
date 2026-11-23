@@ -1,7 +1,9 @@
 import { Router } from 'express';
 
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { startRound, currentRound, useHint, abandonRound } from '../lib/rounds.js';
+import { validate } from '../middleware/validate.js';
+import { answerSchema } from '../validation/rounds.js';
+import { startRound, currentRound, useHint, answerQuestion, abandonRound } from '../lib/rounds.js';
 
 const roundsRouter = Router();
 
@@ -17,6 +19,11 @@ roundsRouter.post('/', async (req, res) => {
 // The round in play, where the player left it
 roundsRouter.get('/current', async (req, res) => {
     res.json({ data: await currentRound(req.user.userId) });
+});
+
+// Checks the answer to the question on screen. The body says which button, never which question
+roundsRouter.post('/current/answer', validate({ body: answerSchema }), async (req, res) => {
+    res.json({ data: await answerQuestion(req.user.userId, req.valid.body.choice) });
 });
 
 // The current question's hint, which halves what a right answer earns

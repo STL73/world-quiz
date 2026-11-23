@@ -4,7 +4,7 @@ import { and, asc, eq, isNull, like } from 'drizzle-orm';
 
 import app from '../src/app.js';
 import { db } from '../src/db/index.js';
-import { users, countries, questions, rounds, roundQuestions } from '../src/db/schema/index.js';
+import { users, scores, countries, questions, rounds, roundQuestions } from '../src/db/schema/index.js';
 import { hashPassword } from '../src/lib/passwords.js';
 
 // Everything made here is recognisable, so afterAll can remove it all
@@ -14,6 +14,8 @@ const CLOUDINARY_ID = 'rounds-test';
 const PASSWORD = 'correct-horse-battery';
 // 12, so a second round has 2 unseen questions after a first round of 10
 const QUESTION_COUNT = 12;
+// A full round makes about 40 requests to the test branch
+const LONG = 90_000;
 
 const ROUNDS = '/api/v1/rounds';
 const CURRENT = `${ROUNDS}/current`;
@@ -87,6 +89,11 @@ async function answer(player, right = true) {
     return res;
 }
 
+async function starTokens(userId) {
+    const [score] = await db.select().from(scores).where(eq(scores.userId, userId));
+    return score.starTokens;
+}
+
 describe('starting a round', () => {
     it('picks 10 different questions, shuffles each, and shows the first without its answer', async () => {
         const player = await newPlayer();
@@ -139,8 +146,7 @@ describe('starting a round', () => {
 });
 
 describe('the current round', () => {
-    // Needs the answer route, which comes with the answering task
-    it.skip('continues where the player left off and records when the question was shown', async () => {
+    it('continues where the player left off and records when the question was shown', async () => {
         const player = await newPlayer();
         const started = await player.agent.post(ROUNDS);
         await answer(player);
@@ -219,5 +225,119 @@ describe('giving up', () => {
     it('answers 404 when there is no round in play', async () => {
         const player = await newPlayer();
         expect((await player.agent.post(ABANDON)).status).toBe(404);
+    });
+});
+
+describe('answering', () => {
+    it('plays a full round of right answers to 140 tokens, then finishes it', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+
+        const earned = [];
+        let last;
+        for (let i = 0; i < 10; i += 1) {
+            last = await answer(player);
+            expect(last.status).toBe(200);
+            expect(last.body.data).toMatchObject({ correct: true, streak: i + 1 });
+            earned.push(last.body.data.tokensEarned);
+        }
+        expect(earned).toEqual([10, 10, 15, 15, 15, 15, 15, 15, 15, 15]);
+        expect(last.body.data.starTokens).toBe(140);
+        expect(last.body.data.summary).toMatchObject({ status: 'finished', correctCount: 10, total: 10, tokensEarned: 140 });
+        expect(await starTokens(player.userId)).toBe(140);
+        expect((await player.agent.get(CURRENT)).status).toBe(404);
+    }, LONG);
+
+    it('says which button was right after a wrong answer, and resets the streak', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        await answer(player);
+        const right = await rightChoice(player.userId);
+
+        const res = await player.agent.post(ANSWER).send({ choice: wrongOf(right) });
+        expect(res.status).toBe(200);
+        expect(res.body.data).toMatchObject({ correct: false, correctChoice: right, tokensEarned: 0, streak: 0, starTokens: 10 });
+    });
+
+    it('gives 5 for a right answer with the hint', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        await player.agent.post(HINT);
+        const res = await answer(player);
+        expect(res.body.data).toMatchObject({ correct: true, tokensEarned: 5, streak: 1 });
+    });
+
+    it('puts unseen questions in the next round and pays nothing for repeats', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        for (let i = 0; i < 10; i += 1) await answer(player);
+        const firstRound = await db
+            .select({ questionId: roundQuestions.questionId })
+            .from(roundQuestions)
+            .innerJoin(rounds, eq(rounds.roundId, roundQuestions.roundId))
+            .where(eq(rounds.userId, player.userId));
+        const seen = new Set(firstRound.map((row) => row.questionId));
+
+        await player.agent.post(ROUNDS);
+        const secondRound = [];
+        for (let i = 0; i < 10; i += 1) {
+            const { rq } = await currentRow(player.userId);
+            secondRound.push(rq.questionId);
+            const res = await answer(player);
+            // Unseen questions pay; repeats pay nothing, streak bonus included
+            expect(res.body.data.tokensEarned > 0).toBe(!seen.has(rq.questionId));
+        }
+        // 12 questions, 10 seen: the 2 unseen must be in the second round
+        expect(secondRound.filter((id) => !seen.has(id))).toHaveLength(QUESTION_COUNT - 10);
+    }, LONG * 2);
+
+    it('scores a double click once: the second click gets 409', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        const choice = await rightChoice(player.userId);
+        await player.agent.post(ANSWER).send({ choice });
+
+        // The next question hasn't been opened, so this can't land on it
+        const again = await player.agent.post(ANSWER).send({ choice });
+        expect(again.status).toBe(409);
+        expect(await starTokens(player.userId)).toBe(10);
+    });
+
+    it('scores two answers sent at the same moment once', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        const choice = await rightChoice(player.userId);
+
+        const results = await Promise.all([
+            player.agent.post(ANSWER).send({ choice }),
+            player.agent.post(ANSWER).send({ choice }),
+        ]);
+        expect(results.map((res) => res.status).sort()).toEqual([200, 409]);
+        expect(await starTokens(player.userId)).toBe(10);
+        const answered = await db
+            .select()
+            .from(roundQuestions)
+            .innerJoin(rounds, eq(rounds.roundId, roundQuestions.roundId))
+            .where(and(eq(rounds.userId, player.userId), eq(roundQuestions.correct, true)));
+        expect(answered).toHaveLength(1);
+    });
+
+    it('keeps the tokens of a round given up', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        await answer(player);
+        const res = await player.agent.post(ABANDON);
+        expect(res.body.data).toMatchObject({ status: 'abandoned', correctCount: 1, tokensEarned: 10 });
+        expect(res.body.data.questions[0].correctAnswer).toEqual(expect.any(String));
+        expect(await starTokens(player.userId)).toBe(10);
+    });
+
+    it('refuses a choice outside 1 to 3, and answers 404 with no round', async () => {
+        const player = await newPlayer();
+        expect((await player.agent.post(ANSWER).send({ choice: 1 })).status).toBe(404);
+        await player.agent.post(ROUNDS);
+        const res = await player.agent.post(ANSWER).send({ choice: 4 });
+        expect(res.status).toBe(400);
+        expect(res.body.error.details[0].path).toBe('body.choice');
     });
 });
