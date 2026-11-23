@@ -1,0 +1,85 @@
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  .moods { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+  .moods .card { width:360px; padding:0; overflow:hidden; cursor:pointer; }
+  .card-body { padding:12px 16px; }
+  .card-body p { margin:4px 0 0; font-size:14px; }
+  .phone { position:relative; width:360px; height:640px; box-sizing:border-box; overflow:hidden;
+           background:radial-gradient(circle at 30% 0%,#173a5e,#0b1424 60%); color:#e8f1ff; font-family:Inter, sans-serif; }
+  .phone img { width:100%; height:100%; object-fit:cover; display:block; }
+  .top { display:flex; justify-content:space-between; align-items:center; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; }
+  .glow { color:#3ee6c4; } .coral { color:#ff7a59; }
+  h4 { font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:700; margin:0; }
+  .ans { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:12px 14px; font-weight:600; font-size:15px; }
+  .hintbox { border-left:3px solid #3ee6c4; background:rgba(62,230,196,.08); border-radius:0 10px 10px 0; padding:8px 10px; font-size:13px; line-height:1.4; }
+  .hintbox b { color:#3ee6c4; font-weight:600; }
+  .bar { height:4px; background:rgba(255,255,255,.12); border-radius:4px; overflow:hidden; }
+  .bar i { display:block; width:40%; height:100%; background:#3ee6c4; }
+
+  /* 1 stacked */
+  .l1 { display:flex; flex-direction:column; gap:10px; padding:16px; }
+  .l1 .photo { height:200px; border-radius:18px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.12),0 10px 30px rgba(0,0,0,.5); }
+
+  /* 2 bleed + sheet */
+  .l2 .photo { position:absolute; inset:0 0 auto 0; height:290px; }
+  .l2 .photo::after { content:""; position:absolute; inset:0; background:linear-gradient(#0b1424cc,transparent 30%); }
+  .l2 .top { position:absolute; top:14px; left:16px; right:16px; z-index:2; }
+  .l2 .sheet { position:absolute; left:0; right:0; bottom:0; top:262px; background:#0f1d33; border-radius:24px 24px 0 0;
+               padding:18px 16px 16px; display:flex; flex-direction:column; gap:10px; box-shadow:0 -8px 24px rgba(0,0,0,.4); }
+
+  /* 3 full photo */
+  .l3 .photo { position:absolute; inset:0; }
+  .l3 .photo::after { content:""; position:absolute; inset:0; background:linear-gradient(#0b142499,transparent 25%,transparent 30%,#0b1424f2 58%); }
+  .l3 .top { position:absolute; top:14px; left:16px; right:16px; z-index:2; }
+  .l3 .tray { position:absolute; left:16px; right:16px; bottom:16px; display:flex; flex-direction:column; gap:10px; }
+  .l3 .ans { background:rgba(11,20,36,.55); backdrop-filter:blur(8px); }
+</style>
+
+<h2>Which layout for the question screen?</h2>
+<p class="subtitle">Night explorer, 360 × 640. The worst case is shown: the hint is open, and it's the longest hint in the database (question 43, 95 characters). The spare height under each is measured and written in its description.</p>
+
+<div class="moods">
+  <div class="card" data-choice="stacked" onclick="toggleSelect(this)">
+    <div class="phone l1">
+      <div class="top"><span>04 / 10</span><span><span class="glow">★ 110</span> &nbsp;<span class="coral">▲ 3</span></span></div>
+      <div class="bar"><i></i></div>
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872428/world-quiz/development/questions/australia-q2" alt=""></div>
+      <h4>Which harbour is this?</h4>
+      <div class="hintbox"><b>Hint · </b>A harbour where a famous steel arch bridge stands beside one of the world's great opera houses.</div>
+      <div class="ans">Sydney Harbour</div>
+      <div class="ans">San Francisco Bay</div>
+      <div class="ans">Table Bay</div>
+    </div>
+    <div class="card-body"><h3>1 · Stacked</h3><p>Photo in a framed card, everything below it. Simplest; the photo is the smallest of the three. <b>Measured: photo 200px tall; 65px spare at 640px, so with a browser address bar (~80px) it is 15px short and the photo would shrink to fit.</b></p></div>
+  </div>
+
+  <div class="card" data-choice="sheet" onclick="toggleSelect(this)">
+    <div class="phone l2">
+      <div class="top"><span>04 / 10</span><span><span class="glow">★ 110</span> &nbsp;<span class="coral">▲ 3</span></span></div>
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872428/world-quiz/development/questions/australia-q2" alt=""></div>
+      <div class="sheet">
+        <h4>Which harbour is this?</h4>
+        <div class="hintbox"><b>Hint · </b>A harbour where a famous steel arch bridge stands beside one of the world's great opera houses.</div>
+        <div class="ans">Sydney Harbour</div>
+        <div class="ans">San Francisco Bay</div>
+        <div class="ans">Table Bay</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>2 · Photo + sheet</h3><p>Photo edge to edge across the top, answers on a sheet that overlaps it. Bigger photo, still nothing drawn over it. <b>Measured: 262px of clear photo; 72px spare at 640px, about 8px short with an address bar, again solved by shrinking the photo.</b></p></div>
+  </div>
+
+  <div class="card" data-choice="fullphoto" onclick="toggleSelect(this)">
+    <div class="phone l3">
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872428/world-quiz/development/questions/australia-q2" alt=""></div>
+      <div class="top"><span>04 / 10</span><span><span class="glow">★ 110</span> &nbsp;<span class="coral">▲ 3</span></span></div>
+      <div class="tray">
+        <h4>Which harbour is this?</h4>
+        <div class="hintbox"><b>Hint · </b>A harbour where a famous steel arch bridge stands beside one of the world's great opera houses.</div>
+        <div class="ans">Sydney Harbour</div>
+        <div class="ans">San Francisco Bay</div>
+        <div class="ans">Table Bay</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>3 · Full-screen photo</h3><p>The photo fills the screen; question and answers float over its darkened lower half. Most immersive, but the answers cover part of the photo. <b>Measured: 336px of clear photo above the question, the rest sits behind the answers. Always fits, because the photo is just a background.</b></p></div>
+  </div>
+</div>

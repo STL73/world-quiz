@@ -1,0 +1,116 @@
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  .moods { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+  .moods .card { width:360px; padding:0; overflow:hidden; cursor:pointer; }
+  .card-body { padding:12px 16px; } .card-body p { margin:4px 0 0; font-size:14px; }
+  .switch { display:flex; gap:8px; justify-content:center; margin-top:8px; }
+  .switch button { font:600 14px Inter,sans-serif; padding:8px 16px; border-radius:999px; border:1px solid #888; background:#fff; cursor:pointer; }
+  .switch button.on { background:#0b1424; color:#fff; }
+
+  .phone { position:relative; width:360px; height:640px; overflow:hidden; background:#0b1424; color:#e8f1ff; font-family:Inter,sans-serif; }
+  .photo { position:absolute; inset:0 0 auto 0; height:290px; }
+  .photo img { width:100%; height:100%; object-fit:cover; display:block; }
+  .photo::after { content:""; position:absolute; inset:0; background:linear-gradient(#0b1424cc,transparent 30%); }
+  .top { position:absolute; top:14px; left:16px; right:16px; z-index:2; display:flex; justify-content:space-between; font:700 14px 'Space Grotesk',sans-serif; }
+  .glow { color:#3ee6c4; } .coral { color:#ff7a59; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; top:262px; background:#0f1d33; border-radius:24px 24px 0 0; padding:18px 16px 16px; display:flex; flex-direction:column; gap:10px; box-shadow:0 -8px 24px rgba(0,0,0,.4); }
+  h4 { font:700 22px 'Space Grotesk',sans-serif; margin:0; }
+  .ans { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:12px 14px; font-weight:600; font-size:15px; display:flex; justify-content:space-between; }
+  .ans.dim { opacity:.4; }
+  .ans.right { background:rgba(62,230,196,.16); border-color:#3ee6c4; color:#bff7ea; }
+  .ans.wrong { background:rgba(255,122,89,.16); border-color:#ff7a59; color:#ffd2c6; }
+  .next { margin-top:auto; background:#3ee6c4; color:#0b1424; border-radius:14px; padding:13px; text-align:center; font:700 16px 'Space Grotesk',sans-serif; }
+  .float { position:absolute; top:40px; right:20px; z-index:3; font:700 20px 'Space Grotesk',sans-serif; color:#3ee6c4; text-shadow:0 2px 8px #000; }
+
+  /* B result panel */
+  .result { border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:6px; }
+  .result.ok { background:rgba(62,230,196,.12); border:1px solid #3ee6c4; }
+  .result.bad { background:rgba(255,122,89,.12); border:1px solid #ff7a59; }
+  .result .big { font:700 26px 'Space Grotesk',sans-serif; }
+  .result .row { display:flex; gap:6px; flex-wrap:wrap; font-size:14px; }
+  .chip { white-space:nowrap; background:rgba(255,255,255,.08); border-radius:999px; padding:4px 10px; font-size:13px; font-weight:600; }
+
+  /* C overlay */
+  .overlay { position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; padding:24px; backdrop-filter:blur(3px); }
+  .overlay.ok { background:rgba(8,40,40,.82); } .overlay.bad { background:rgba(50,18,12,.84); }
+  .overlay .icon { width:84px; height:84px; border-radius:50%; display:grid; place-items:center; font-size:44px; font-weight:700; }
+  .overlay.ok .icon { background:#3ee6c4; color:#0b1424; } .overlay.bad .icon { background:#ff7a59; color:#2a0f08; }
+  .overlay .big { font:700 30px 'Space Grotesk',sans-serif; }
+  .overlay .sub { font-size:15px; opacity:.85; }
+  .overlay .next { width:100%; margin-top:18px; }
+
+  .state-wrong .s-ok, .state-right .s-bad { display:none !important; }
+</style>
+
+<h2>What happens after an answer is tapped?</h2>
+<p class="subtitle">Question 13, Big Ben (a tall photo, so you can also see how layout 2 crops one). The figures are what the API would really return, using the spec's worked example: question 4, streak 3 going in, first time seen. <b>Right:</b> +10, +5 streak bonus = +15, total 125, streak 4. <b>Wrong</b> (tapped Blackpool Tower): +0, streak back to 0, total stays 110.</p>
+<div class="switch">
+  <button class="on" onclick="document.querySelector('.moods').className='moods state-right';this.classList.add('on');this.nextElementSibling.classList.remove('on')">Show: right answer</button>
+  <button onclick="document.querySelector('.moods').className='moods state-wrong';this.classList.add('on');this.previousElementSibling.classList.remove('on')">Show: wrong answer</button>
+</div>
+
+<div class="moods state-right">
+  <!-- A inline -->
+  <div class="card" data-choice="inline" onclick="toggleSelect(this)">
+    <div class="phone">
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872395/world-quiz/development/questions/united-kingdom-q1" alt=""></div>
+      <div class="top"><span>04 / 10</span><span><span class="glow"><span class="s-ok">★ 125</span><span class="s-bad">★ 110</span></span> &nbsp;<span class="coral"><span class="s-ok">▲ 4</span><span class="s-bad">▲ 0</span></span></span></div>
+      <div class="float s-ok">+15</div>
+      <div class="sheet">
+        <h4>Which clock tower is this?</h4>
+        <div class="ans dim">Branca Tower</div>
+        <div class="ans s-ok dim">Blackpool Tower</div>
+        <div class="ans wrong s-bad"><span>Blackpool Tower</span><span>✕</span></div>
+        <div class="ans right"><span>Big Ben</span><span>✓</span></div>
+        <div class="next">Next question →</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>A · Answers light up</h3><p>Nothing moves. The right answer turns teal, a wrong pick turns coral, and "+15" floats up by the score. A Next button appears. The calmest, and the quickest to play through.</p></div>
+  </div>
+
+  <!-- B result panel -->
+  <div class="card" data-choice="panel" onclick="toggleSelect(this)">
+    <div class="phone">
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872395/world-quiz/development/questions/united-kingdom-q1" alt=""></div>
+      <div class="top"><span>04 / 10</span><span><span class="glow"><span class="s-ok">★ 125</span><span class="s-bad">★ 110</span></span> &nbsp;<span class="coral"><span class="s-ok">▲ 4</span><span class="s-bad">▲ 0</span></span></span></div>
+      <div class="sheet">
+        <div class="result ok s-ok">
+          <div class="big glow">✓ Correct!</div>
+          <div>It's <b>Big Ben</b>.</div>
+          <div class="row"><span class="chip">+10 first time</span><span class="chip">+5 streak</span><span class="chip">▲ 4 in a row</span></div>
+        </div>
+        <div class="result bad s-bad">
+          <div class="big coral">✕ Not this time</div>
+          <div>You picked Blackpool Tower. It's <b>Big Ben</b>.</div>
+          <div class="row"><span class="chip">+0</span><span class="chip">Streak reset</span></div>
+        </div>
+        <div class="next">Next question →</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>B · Result panel</h3><p>A panel replaces the question and spells out the result: what it was, and where the tokens came from (first time, streak bonus). It teaches the scoring as you play. The answer buttons make way for it (keeping them pushed the Next button off a 640px screen).</p></div>
+  </div>
+
+  <!-- C overlay -->
+  <div class="card" data-choice="overlay" onclick="toggleSelect(this)">
+    <div class="phone">
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872395/world-quiz/development/questions/united-kingdom-q1" alt=""></div>
+      <div class="sheet">
+        <h4>Which clock tower is this?</h4>
+        <div class="ans">Branca Tower</div><div class="ans">Blackpool Tower</div><div class="ans">Big Ben</div>
+      </div>
+      <div class="overlay ok s-ok">
+        <div class="icon">✓</div>
+        <div class="big glow">+15</div>
+        <div class="sub">Big Ben · 4 in a row</div>
+        <div class="next">Next question →</div>
+      </div>
+      <div class="overlay bad s-bad">
+        <div class="icon">✕</div>
+        <div class="big coral">It's Big Ben</div>
+        <div class="sub">You picked Blackpool Tower · streak reset</div>
+        <div class="next">Next question →</div>
+      </div>
+    </div>
+    <div class="card-body"><h3>C · Full-screen moment</h3><p>The whole screen flashes teal or coral with a big tick or cross and the tokens. The most "game show"; it hides the photo, so you can't look again at what you got wrong.</p></div>
+  </div>
+</div>

@@ -1,0 +1,85 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Nunito:wght@600;800;900&family=Space+Grotesk:wght@500;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  .moods { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+  .moods .card { width:360px; padding:0; overflow:hidden; cursor:pointer; }
+  .phone { width:360px; height:640px; box-sizing:border-box; display:flex; flex-direction:column; overflow:hidden; }
+  .phone img { width:100%; height:100%; object-fit:cover; display:block; }
+  .card-body { padding:12px 16px; }
+  .card-body p { margin:4px 0 0; font-size:14px; }
+
+  /* A: Postcard */
+  .pa { background:#f6efe2; color:#1f2a44; font-family:Inter, sans-serif; padding:16px; gap:12px; }
+  .pa .top { display:flex; justify-content:space-between; align-items:center; font-size:13px; font-weight:600; }
+  .pa .stamp { border:2px dashed #c8553d; color:#c8553d; border-radius:6px; padding:3px 8px; transform:rotate(-3deg); }
+  .pa .photo { height:220px; border:8px solid #fff; box-shadow:0 6px 16px rgba(31,42,68,.18); transform:rotate(-1deg); }
+  .pa h4 { font-family:Fraunces, serif; font-size:24px; font-weight:800; margin:6px 0 0; }
+  .pa .ans { background:#fff; border:2px solid #1f2a44; border-radius:12px; padding:12px 14px; font-weight:600; font-size:15px; }
+  .pa .hint { align-self:flex-start; color:#c8553d; font-weight:600; font-size:14px; border-bottom:2px solid #c8553d; }
+
+  /* B: Arcade */
+  .pb { background:linear-gradient(160deg,#5b3df5,#2f8cff); color:#fff; font-family:Nunito, sans-serif; padding:16px; gap:12px; }
+  .pb .top { display:flex; justify-content:space-between; align-items:center; font-weight:900; font-size:15px; }
+  .pb .pill { background:rgba(255,255,255,.2); border-radius:999px; padding:5px 12px; }
+  .pb .bar { height:10px; background:rgba(255,255,255,.25); border-radius:999px; overflow:hidden; }
+  .pb .bar i { display:block; width:40%; height:100%; background:#ffd23f; border-radius:999px; }
+  .pb .photo { height:210px; border-radius:22px; overflow:hidden; border:4px solid #fff; }
+  .pb h4 { font-size:24px; font-weight:900; margin:2px 0 0; }
+  .pb .ans { background:#fff; color:#2d2366; border-radius:16px; padding:12px 14px; font-weight:800; font-size:16px; box-shadow:0 5px 0 #c9c2f2; }
+  .pb .hint { align-self:center; background:#ffd23f; color:#2d2366; border-radius:999px; padding:8px 18px; font-weight:900; font-size:14px; box-shadow:0 4px 0 #c9a21f; }
+
+  /* C: Night explorer */
+  .pc { background:radial-gradient(circle at 30% 0%,#173a5e,#0b1424 60%); color:#e8f1ff; font-family:Inter, sans-serif; padding:16px; gap:12px; }
+  .pc .top { display:flex; justify-content:space-between; align-items:center; font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; }
+  .pc .glow { color:#3ee6c4; }
+  .pc .coral { color:#ff7a59; }
+  .pc .photo { height:220px; border-radius:18px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.5); }
+  .pc h4 { font-family:'Space Grotesk', sans-serif; font-size:23px; font-weight:700; margin:4px 0 0; }
+  .pc .ans { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:14px; padding:12px 14px; font-weight:600; font-size:15px; }
+  .pc .hint { align-self:flex-start; color:#3ee6c4; font-weight:600; font-size:14px; }
+</style>
+
+<h2>Which mood feels like World Quiz?</h2>
+<p class="subtitle">Same real question in each (question 8, the longest answer in the database), at 360px, the narrowest common phone. Only the mood is being chosen here, not the layout. Click one; you can also say "A's colours with C's type".</p>
+
+<div class="moods">
+  <div class="card" data-choice="postcard" onclick="toggleSelect(this)">
+    <div class="phone pa">
+      <div class="top"><span>4 of 10</span><span class="stamp">★ 110 · streak 3</span></div>
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872389/world-quiz/development/questions/italy-q5" alt=""></div>
+      <h4>Which arcade is this?</h4>
+      <div class="ans">Galleria Vittorio Emanuele II</div>
+      <div class="ans">Burlington Arcade</div>
+      <div class="ans">Galeries Lafayette</div>
+      <span class="hint">Show a hint (5 instead of 10)</span>
+    </div>
+    <div class="card-body"><h3>A · Postcard</h3><p>Warm paper, navy ink, a red stamp. Travel-journal feel; leads naturally into the passport later.</p></div>
+  </div>
+
+  <div class="card" data-choice="arcade" onclick="toggleSelect(this)">
+    <div class="phone pb">
+      <div class="top"><span class="pill">4 / 10</span><span class="pill">★ 110 &nbsp;🔥 3</span></div>
+      <div class="bar"><i></i></div>
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872389/world-quiz/development/questions/italy-q5" alt=""></div>
+      <h4>Which arcade is this?</h4>
+      <div class="ans">Galleria Vittorio Emanuele II</div>
+      <div class="ans">Burlington Arcade</div>
+      <div class="ans">Galeries Lafayette</div>
+      <span class="hint">💡 Hint</span>
+    </div>
+    <div class="card-body"><h3>B · Arcade</h3><p>Bright gradient, chunky buttons that press down, yellow stars. The loudest and most game-like.</p></div>
+  </div>
+
+  <div class="card" data-choice="night" onclick="toggleSelect(this)">
+    <div class="phone pc">
+      <div class="top"><span>04 / 10</span><span><span class="glow">★ 110</span> &nbsp;<span class="coral">▲ 3</span></span></div>
+      <div class="photo"><img src="https://res.cloudinary.com/n9zygzwf/image/upload/f_auto,q_auto/v1794872389/world-quiz/development/questions/italy-q5" alt=""></div>
+      <h4>Which arcade is this?</h4>
+      <div class="ans">Galleria Vittorio Emanuele II</div>
+      <div class="ans">Burlington Arcade</div>
+      <div class="ans">Galeries Lafayette</div>
+      <span class="hint">Use hint →</span>
+    </div>
+    <div class="card-body"><h3>C · Night explorer</h3><p>Dark navy, glowing teal and coral, glassy answers. Modern and calm; photos pop against it.</p></div>
+  </div>
+</div>

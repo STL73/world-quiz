@@ -1,0 +1,100 @@
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  .moods { display:flex; gap:28px; flex-wrap:wrap; justify-content:center; margin-top:16px; }
+  .moods .card { width:360px; padding:0; overflow:hidden; cursor:pointer; }
+  .card-body { padding:12px 16px; } .card-body p { margin:4px 0 0; font-size:14px; }
+  .phone { position:relative; width:360px; height:640px; box-sizing:border-box; overflow:hidden; background:radial-gradient(circle at 30% 0%,#173a5e,#0b1424 60%); color:#e8f1ff; font-family:Inter,sans-serif; padding:18px 16px 16px; display:flex; flex-direction:column; gap:12px; }
+  .scroll { overflow-y:auto; scrollbar-width:thin; }
+  .glow { color:#3ee6c4; } .coral { color:#ff7a59; } .muted { color:#8ea3c0; }
+  .label { font:600 12px Inter,sans-serif; letter-spacing:.08em; text-transform:uppercase; color:#8ea3c0; }
+  .score { font:700 64px/1 'Space Grotesk',sans-serif; }
+  .score small { font-size:28px; color:#8ea3c0; }
+  .tokens { font:700 24px 'Space Grotesk',sans-serif; }
+  .dots { display:flex; gap:6px; }
+  .dot { flex:1; height:30px; border-radius:8px; display:grid; place-items:center; font:700 13px 'Space Grotesk',sans-serif; color:#0b1424; }
+  .dot.ok { background:#3ee6c4; } .dot.bad { background:#ff7a59; } .dot.hint { background:#3ee6c4; box-shadow:inset 0 0 0 3px #ffd166; }
+  .level { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px; }
+  .level .row { display:flex; justify-content:space-between; font-size:14px; font-weight:600; }
+  .lbar { height:8px; background:rgba(255,255,255,.12); border-radius:8px; overflow:hidden; }
+  .lbar i { display:block; height:100%; background:linear-gradient(90deg,#3ee6c4,#7af0d8); }
+  .up { background:#ffd166; color:#0b1424; border-radius:999px; padding:3px 10px; font-size:12px; font-weight:700; }
+  .btns { display:flex; gap:10px; margin-top:auto; }
+  .btn { flex:1; border-radius:14px; padding:13px; text-align:center; font:700 16px 'Space Grotesk',sans-serif; }
+  .btn.main { background:#3ee6c4; color:#0b1424; } .btn.alt { border:1px solid rgba(255,255,255,.2); }
+  .list { display:flex; flex-direction:column; gap:6px; }
+  .item { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.05); border-radius:12px; padding:6px; }
+  .item img { width:44px; height:44px; border-radius:8px; object-fit:cover; flex:none; }
+  .item .t { flex:1; min-width:0; font-size:14px; font-weight:600; }
+  .item .t span { display:block; font-size:12px; font-weight:500; color:#8ea3c0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .p { font:700 14px 'Space Grotesk',sans-serif; width:40px; text-align:right; }
+  .head-row { display:flex; justify-content:space-between; align-items:flex-end; }
+  .legend { display:flex; gap:12px; font-size:12px; color:#8ea3c0; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
+</style>
+
+<h2>The end of a round</h2>
+<p class="subtitle">The spec's worked example, played on real questions: ✓ ✓ ✓ ✓ ✗ ✓ ✓(hint) ✓ ✓ ✓ = <b>9 / 10, 110 tokens</b>. A new player starts at 0, so this round also takes them from level 1 to level 2 (level = tokens ÷ 100, rounded down, + 1). That level-up only happens on some rounds; the screens show it because this is the real outcome of these figures.</p>
+
+<div class="moods">
+  <div class="card" data-choice="hero" onclick="toggleSelect(this)">
+    <div class="phone">
+      <div class="label">Round complete</div>
+      <div class="score">9<small> / 10</small></div>
+      <div class="tokens glow">+110 ★</div>
+      <div class="dots" data-dots></div>
+      <div class="legend"><span><i style="background:#3ee6c4"></i>right</span><span><i style="background:#3ee6c4;box-shadow:inset 0 0 0 2px #ffd166"></i>with hint</span><span><i style="background:#ff7a59"></i>wrong</span></div>
+      <div class="level">
+        <div class="row"><span>Level 2 <span class="up">Level up!</span></span><span class="muted">110 ★</span></div>
+        <div class="lbar"><i style="width:10%"></i></div>
+        <div class="muted" style="font-size:13px">90 more to level 3</div>
+      </div>
+      <div class="btns"><div class="btn alt">Home</div><div class="btn main">Play again</div></div>
+    </div>
+    <div class="card-body"><h3>A · Big score</h3><p>One glance: score, tokens, ten coloured blocks for the round, the level bar. No detail about which questions were missed.</p></div>
+  </div>
+
+  <div class="card" data-choice="list" onclick="toggleSelect(this)">
+    <div class="phone">
+      <div class="head-row"><div><div class="label">Round complete</div><div class="tokens">9 / 10 · <span class="glow">+110 ★</span></div></div><span class="up">Level 2!</span></div>
+      <div class="list scroll" data-list style="flex:1"></div>
+      <div class="btns"><div class="btn alt">Home</div><div class="btn main">Play again</div></div>
+    </div>
+    <div class="card-body"><h3>B · Review list</h3><p>Every question with its photo, the right answer and its tokens. You learn from the ones you missed. Measured: 7 of the 10 rows fit; the rest scroll.</p></div>
+  </div>
+
+  <div class="card" data-choice="both" onclick="toggleSelect(this)">
+    <div class="phone scroll">
+      <div class="label">Round complete</div>
+      <div class="head-row"><div class="score" style="font-size:52px">9<small> / 10</small></div><div class="tokens glow">+110 ★</div></div>
+      <div class="dots" data-dots></div>
+      <div class="level">
+        <div class="row"><span>Level 2 <span class="up">Level up!</span></span><span class="muted">110 ★</span></div>
+        <div class="lbar"><i style="width:10%"></i></div>
+      </div>
+      <div class="btns" style="margin-top:0"><div class="btn alt">Home</div><div class="btn main">Play again</div></div>
+      <div class="label" style="margin-top:6px">Your answers</div>
+      <div class="list" data-list></div>
+    </div>
+    <div class="card-body"><h3>C · Score, then review</h3><p>A's summary and buttons at the top, B's list underneath for whoever scrolls. The buttons stay above the fold; the list costs nothing for players who don't want it.</p></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const u = 'https://res.cloudinary.com/n9zygzwf/image/upload/c_fill,w_96,h_96,f_auto,q_auto/';
+  const rows = [
+    ['v1794872400/world-quiz/development/questions/france-q1', 'Eiffel Tower', 'France', 'ok', 10],
+    ['v1794872427/world-quiz/development/questions/australia-q1', 'Sydney Opera House', 'Australia', 'ok', 10],
+    ['v1794872395/world-quiz/development/questions/united-kingdom-q1', 'Big Ben', 'United Kingdom · streak bonus', 'ok', 15],
+    ['v1794872389/world-quiz/development/questions/italy-q5', 'Galleria Vittorio Emanuele II', 'Italy · streak bonus', 'ok', 15],
+    ['v1794872432/world-quiz/development/questions/india-q1', 'Taj Mahal', "You said Humayun's Tomb", 'bad', 0],
+    ['v1794872405/world-quiz/development/questions/uae-q2', 'Burj Khalifa', 'UAE', 'ok', 10],
+    ['v1794872411/world-quiz/development/questions/usa-q2', 'Golden Gate Bridge', 'USA · with hint', 'hint', 5],
+    ['v1794872424/world-quiz/development/questions/malaysia-q1', 'Petronas Twin Towers', 'Malaysia · streak bonus', 'ok', 15],
+    ['v1794872429/world-quiz/development/questions/egypt-q1', 'Great Pyramids of Giza', 'Egypt · streak bonus', 'ok', 15],
+    ['v1794872152/world-quiz/development/questions/brazil-q1', 'Jesus Christ in Rio', 'Brazil · streak bonus', 'ok', 15],
+  ];
+  document.querySelectorAll('[data-dots]').forEach(d => d.innerHTML = rows.map((r, i) => `<div class="dot ${r[3]}">${r[3] === 'bad' ? '✕' : i + 1}</div>`).join(''));
+  document.querySelectorAll('[data-list]').forEach(l => l.innerHTML = rows.map(r => `<div class="item"><img src="${u}${r[0]}" alt=""><div class="t">${r[1]}<span>${r[2]}</span></div><div class="p ${r[3] === 'bad' ? 'coral' : 'glow'}">${r[3] === 'bad' ? '✕' : '+' + r[4]}</div></div>`).join(''));
+})();
+</script>

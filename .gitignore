@@ -67,3 +67,6 @@ $RECYCLE.BIN/
 *.swo
 *~
 .history/
+
+# Brainstorming companion scratch files
+.superpowers/
