@@ -33,8 +33,8 @@ async function prepareNeon() {
         throw new Error('Neon already has questions. Run `npm run db:import -- --reset` to empty them first');
     }
     if (RESET) {
-        // Row by row, not TRUNCATE: TRUNCATE would refuse because scores points at questions, and its
-        // CASCADE would empty scores too. Deleting a question only clears a saved_question_id
+        // Row by row, not TRUNCATE: TRUNCATE refuses because round_questions points at questions.
+        // A question that has been played can't be deleted at all, so a reset only works before play
         await db.delete(questions);
         await db.delete(countries);
         // Number the new rows from 1 again
