@@ -2,8 +2,8 @@ import { Router } from 'express';
 
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { answerSchema } from '../validation/rounds.js';
-import { startRound, currentRound, useHint, answerQuestion, abandonRound } from '../lib/rounds.js';
+import { answerSchema, roundParamsSchema } from '../validation/rounds.js';
+import { startRound, currentRound, useHint, answerQuestion, abandonRound, roundSummary } from '../lib/rounds.js';
 
 const roundsRouter = Router();
 
@@ -34,6 +34,11 @@ roundsRouter.post('/current/hint', async (req, res) => {
 // Gives up the round in play and shows its results
 roundsRouter.post('/current/abandon', async (req, res) => {
     res.json({ data: await abandonRound(req.user.userId) });
+});
+
+// An ended round's results. After the /current routes, so "current" is never read as an id
+roundsRouter.get('/:id', validate({ params: roundParamsSchema }), async (req, res) => {
+    res.json({ data: await roundSummary(req.user.userId, req.valid.params.id) });
 });
 
 export default roundsRouter;

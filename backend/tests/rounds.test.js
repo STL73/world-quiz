@@ -341,3 +341,28 @@ describe('answering', () => {
         expect(res.body.error.details[0].path).toBe('body.choice');
     });
 });
+
+describe('a round\'s results', () => {
+    it('shows an ended round to its player only, and never a round in play', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        await answer(player);
+        const ended = (await player.agent.post(ABANDON)).body.data.roundId;
+
+        const own = await player.agent.get(`${ROUNDS}/${ended}`);
+        expect(own.status).toBe(200);
+        expect(own.body.data).toMatchObject({ roundId: ended, status: 'abandoned', correctCount: 1, tokensEarned: 10 });
+        expect(own.body.data.questions[0]).toMatchObject({ position: 1, correct: true, country: COUNTRY });
+
+        const other = await newPlayer();
+        expect((await other.agent.get(`${ROUNDS}/${ended}`)).status).toBe(404);
+
+        const inPlay = (await player.agent.post(ROUNDS)).body.data.roundId;
+        expect((await player.agent.get(`${ROUNDS}/${inPlay}`)).status).toBe(404);
+    });
+
+    it('refuses an id that isn\'t a number', async () => {
+        const player = await newPlayer();
+        expect((await player.agent.get(`${ROUNDS}/abc`)).status).toBe(400);
+    });
+});
