@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { startRound, currentRound } from '../lib/rounds.js';
+import { startRound, currentRound, useHint, abandonRound } from '../lib/rounds.js';
 
 const roundsRouter = Router();
 
@@ -17,6 +17,16 @@ roundsRouter.post('/', async (req, res) => {
 // The round in play, where the player left it
 roundsRouter.get('/current', async (req, res) => {
     res.json({ data: await currentRound(req.user.userId) });
+});
+
+// The current question's hint, which halves what a right answer earns
+roundsRouter.post('/current/hint', async (req, res) => {
+    res.json({ data: await useHint(req.user.userId) });
+});
+
+// Gives up the round in play and shows its results
+roundsRouter.post('/current/abandon', async (req, res) => {
+    res.json({ data: await abandonRound(req.user.userId) });
 });
 
 export default roundsRouter;

@@ -17,7 +17,9 @@ const QUESTION_COUNT = 12;
 
 const ROUNDS = '/api/v1/rounds';
 const CURRENT = `${ROUNDS}/current`;
+const HINT = `${CURRENT}/hint`;
 const ANSWER = `${CURRENT}/answer`;
+const ABANDON = `${CURRENT}/abandon`;
 
 beforeAll(async () => {
     const [country] = await db.insert(countries).values({ name: COUNTRY }).returning();
@@ -175,5 +177,47 @@ describe('who can play', () => {
         const admin = request.agent(app);
         await admin.post('/api/v1/auth/login').send({ email: account.email, password: PASSWORD });
         expect((await admin.post(ROUNDS)).status).toBe(403);
+    });
+});
+
+describe('the hint', () => {
+    it('gives the current question\'s hint, the same again on a second ask, and shows it with the question', async () => {
+        const player = await newPlayer();
+        await player.agent.post(ROUNDS);
+        const { hint } = await currentRow(player.userId);
+
+        const first = await player.agent.post(HINT);
+        expect(first.status).toBe(200);
+        expect(first.body.data).toEqual({ hint });
+        expect((await player.agent.post(HINT)).body.data).toEqual({ hint });
+        expect((await player.agent.get(CURRENT)).body.data.question.hint).toBe(hint);
+        expect((await currentRow(player.userId)).rq.hintUsed).toBe(true);
+    });
+
+    it('answers 404 when there is no round in play', async () => {
+        const player = await newPlayer();
+        expect((await player.agent.post(HINT)).status).toBe(404);
+    });
+});
+
+describe('giving up', () => {
+    it('ends the round, keeps nothing open, and lets a new round start', async () => {
+        const player = await newPlayer();
+        const started = await player.agent.post(ROUNDS);
+
+        const res = await player.agent.post(ABANDON);
+        expect(res.status).toBe(200);
+        expect(res.body.data).toMatchObject({ roundId: started.body.data.roundId, status: 'abandoned', correctCount: 0, total: 10 });
+        // Unanswered questions keep their answers secret: they come back in later rounds
+        for (const question of res.body.data.questions) {
+            expect(question).toMatchObject({ correct: null, chosenAnswer: null, correctAnswer: null });
+        }
+        expect((await player.agent.get(CURRENT)).status).toBe(404);
+        expect((await player.agent.post(ROUNDS)).status).toBe(201);
+    });
+
+    it('answers 404 when there is no round in play', async () => {
+        const player = await newPlayer();
+        expect((await player.agent.post(ABANDON)).status).toBe(404);
     });
 });
