@@ -106,6 +106,17 @@ describe('database schema', () => {
         const left = await db.select().from(sessions).where(eq(sessions.userId, user.userId));
         expect(left).toEqual([]);
     });
+
+    it('starts a question visible', async () => {
+        const question = await addTestQuestion();
+        expect(question.hiddenAt).toBeNull();
+    });
+
+    it('refuses a second country whose name differs only in capitals', async () => {
+        await addTestQuestion();
+        const error = await db.insert(countries).values({ name: TEST_COUNTRY.toUpperCase() }).catch((e) => e);
+        expect(error.cause.code).toBe('23505');
+    });
 });
 
 describe('game tables', () => {

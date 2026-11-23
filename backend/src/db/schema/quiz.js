@@ -1,11 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { pgTable, integer, varchar, smallint, index, check } from 'drizzle-orm/pg-core';
+import { pgTable, integer, varchar, smallint, timestamp, index, check, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // A country the landmarks belong to
 export const countries = pgTable('countries', {
     countryId: integer('country_id').primaryKey().generatedAlwaysAsIdentity(),
-    name: varchar('name', { length: 100 }).notNull().unique(),
-});
+    name: varchar('name', { length: 100 }).notNull(),
+}, (table) => [
+    // On lower(name), so an admin typing "france" finds France instead of making a second one
+    uniqueIndex('countries_name_lower_unique').on(sql`lower(${table.name})`),
+]);
 
 // One landmark photo and its three possible answers
 export const questions = pgTable('questions', {
@@ -22,6 +25,8 @@ export const questions = pgTable('questions', {
     answer3: varchar('answer3', { length: 100 }).notNull(),
     // One number instead of three true/false flags, so exactly one answer is always right
     correctAnswer: smallint('correct_answer').notNull(),
+    // Set while new rounds leave the question out. A played question can't be deleted, so it's hidden
+    hiddenAt: timestamp('hidden_at', { withTimezone: true }),
 }, (table) => [
     check('questions_correct_answer_range', sql`${table.correctAnswer} BETWEEN 1 AND 3`),
     // Postgres doesn't index a foreign key by itself; finding a country's questions needs one
