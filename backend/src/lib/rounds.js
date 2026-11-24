@@ -94,6 +94,24 @@ export async function currentRound(userId) {
     };
 }
 
+// The round in play as counts, without opening its next question, or null. For the home screen
+export async function savedRound(userId) {
+    const [round] = await db
+        .select({ roundId: rounds.roundId })
+        .from(rounds)
+        .where(and(eq(rounds.userId, userId), eq(rounds.status, 'active')));
+    if (!round) return null;
+
+    const rows = await db.select().from(roundQuestions).where(eq(roundQuestions.roundId, round.roundId));
+    const answered = rows.filter((rq) => rq.answeredAt);
+    return {
+        roundId: round.roundId,
+        answered: answered.length,
+        total: rows.length,
+        tokensEarned: answered.reduce((sum, rq) => sum + rq.tokensAwarded, 0),
+    };
+}
+
 // The current question's hint, recorded as used. Asking again gives the same hint
 export async function useHint(userId) {
     const { rq, question } = openRow((await activeRound(userId)).rows);

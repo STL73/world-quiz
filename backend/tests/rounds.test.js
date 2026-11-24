@@ -167,6 +167,27 @@ describe('the current round', () => {
     });
 });
 
+describe('the saved round', () => {
+    it('counts the round in play without opening its next question', async () => {
+        const player = await newPlayer();
+        const start = await player.agent.post(ROUNDS);
+        // Answered directly, not through answer(), which would open question 2
+        await player.agent.post(ANSWER).send({ choice: await rightChoice(player.userId) });
+
+        const res = await player.agent.get(`${ROUNDS}/saved`);
+        expect(res.status).toBe(200);
+        expect(res.body.data).toEqual({ roundId: start.body.data.roundId, answered: 1, total: 10, tokensEarned: 10 });
+        expect((await currentRow(player.userId)).rq.shownAt).toBeNull();
+    });
+
+    it('answers null when there is no round in play', async () => {
+        const player = await newPlayer();
+        const res = await player.agent.get(`${ROUNDS}/saved`);
+        expect(res.status).toBe(200);
+        expect(res.body.data).toBeNull();
+    });
+});
+
 describe('who can play', () => {
     it('needs a logged-in player', async () => {
         expect((await request(app).post(ROUNDS)).status).toBe(401);

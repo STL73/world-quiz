@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { answerSchema, roundParamsSchema } from '../validation/rounds.js';
-import { startRound, currentRound, useHint, answerQuestion, abandonRound, roundSummary } from '../lib/rounds.js';
+import { startRound, currentRound, savedRound, useHint, answerQuestion, abandonRound, roundSummary } from '../lib/rounds.js';
 
 const roundsRouter = Router();
 
@@ -19,6 +19,11 @@ roundsRouter.post('/', async (req, res) => {
 // The round in play, where the player left it
 roundsRouter.get('/current', async (req, res) => {
     res.json({ data: await currentRound(req.user.userId) });
+});
+
+// Whether a round is in play, as counts, for the home screen. null when there is none
+roundsRouter.get('/saved', async (req, res) => {
+    res.json({ data: await savedRound(req.user.userId) });
 });
 
 // Checks the answer to the question on screen. The body says which button, never which question
