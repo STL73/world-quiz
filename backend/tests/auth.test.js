@@ -212,3 +212,36 @@ describe('requireRole', () => {
         expect((await request(guarded).get('/admin-only').set('Cookie', cookieValue(adminLogin))).status).toBe(200);
     });
 });
+
+describe('stars and level', () => {
+    it('gives a new player 0 stars at level 1, on sign-up and on /me', async () => {
+        const { agent, res } = await signUp();
+        expect(res.body.data).toMatchObject({ starTokens: 0, level: 1 });
+
+        const me = await agent.get('/api/v1/auth/me');
+        expect(me.body.data).toMatchObject({ starTokens: 0, level: 1 });
+    });
+
+    it('works the level out from the stars, on /me and at login', async () => {
+        const { agent, res, body } = await signUp();
+        // 250 stars: two full levels of 100, so level 3
+        await db.update(scores).set({ starTokens: 250 }).where(eq(scores.userId, res.body.data.userId));
+
+        const me = await agent.get('/api/v1/auth/me');
+        expect(me.body.data).toMatchObject({ starTokens: 250, level: 3 });
+
+        const login = await request(app).post('/api/v1/auth/login').send({ email: body.email, password: PASSWORD });
+        expect(login.body.data).toMatchObject({ starTokens: 250, level: 3 });
+    });
+
+    it('gives an admin null for both, as admins have no score row', async () => {
+        const admin = await addAdmin();
+        const agent = request.agent(app);
+
+        const login = await agent.post('/api/v1/auth/login').send({ email: admin.email, password: PASSWORD });
+        expect(login.body.data).toMatchObject({ starTokens: null, level: null });
+
+        const me = await agent.get('/api/v1/auth/me');
+        expect(me.body.data).toMatchObject({ starTokens: null, level: null });
+    });
+});

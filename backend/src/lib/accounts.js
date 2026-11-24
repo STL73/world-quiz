@@ -4,6 +4,7 @@ import { db } from '../db/index.js';
 import { users, scores } from '../db/schema/index.js';
 import { fieldError, isUniqueViolation } from './errors.js';
 import { hashPassword } from './passwords.js';
+import { levelFor } from './scoring.js';
 
 // What the frontend may see of an account: everything but the password hash
 export function publicUser(user) {
@@ -14,6 +15,14 @@ export function publicUser(user) {
         role: user.role,
         createdAt: user.createdAt,
     };
+}
+
+// The account the frontend keeps: publicUser plus a player's stars and level. Admins have no
+// score row, so both are null
+export async function accountFor(user) {
+    const [score] = await db.select({ starTokens: scores.starTokens }).from(scores).where(eq(scores.userId, user.userId));
+    const starTokens = score?.starTokens ?? null;
+    return { ...publicUser(user), starTokens, level: starTokens === null ? null : levelFor(starTokens) };
 }
 
 // Creates a player and their score row together. A taken email or name is a 409 on that field

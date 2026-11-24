@@ -6,7 +6,7 @@ import { db } from '../db/index.js';
 import { users } from '../db/schema/index.js';
 import { aj } from '../config/arcjet.js';
 import { AppError } from '../lib/errors.js';
-import { createPlayer, publicUser } from '../lib/accounts.js';
+import { accountFor, createPlayer } from '../lib/accounts.js';
 import { checkPassword } from '../lib/passwords.js';
 import { SESSION_COOKIE, startSession, endSession } from '../lib/sessions.js';
 import { validate } from '../middleware/validate.js';
@@ -32,7 +32,7 @@ authRouter.post(
     async (req, res) => {
         const user = await createPlayer(req.valid.body);
         await startSession(res, user.userId);
-        res.status(201).json({ data: publicUser(user) });
+        res.status(201).json({ data: await accountFor(user) });
     },
 );
 
@@ -46,7 +46,7 @@ authRouter.post('/login', arcjetProtect(loginGuard), validate({ body: loginSchem
     if (!user || !matches) throw new AppError(401, 'Email or password is incorrect');
 
     await startSession(res, user.userId);
-    res.json({ data: publicUser(user) });
+    res.json({ data: await accountFor(user) });
 });
 
 // Logs this device out. Answers 204 even with no session, so it's always safe to call
@@ -56,8 +56,8 @@ authRouter.post('/logout', async (req, res) => {
 });
 
 // The logged-in account, which the frontend asks for when it loads
-authRouter.get('/me', requireAuth, (req, res) => {
-    res.json({ data: publicUser(req.user) });
+authRouter.get('/me', requireAuth, async (req, res) => {
+    res.json({ data: await accountFor(req.user) });
 });
 
 export default authRouter;
